@@ -39,7 +39,14 @@ button.on{background:#1c7a3d}
 </style>
 </head>
 <body>
+<script>
+document.addEventListener("contextmenu", function(e) {
+    e.preventDefault();
+    return false;
+}, true);
+</script>
 
+<!-- rest of your page -->
 <div id="top">
   <a class="btn" href="index.html">Home</a>
   <span class="sp">Hindi Songs</span>
@@ -72,14 +79,7 @@ button.on{background:#1c7a3d}
     </div>
   </div>
 </div>
-
-<script>
-document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
-});
-</script>
-  
+ 
 <script src="https://www.youtube.com/iframe_api"></script>
 
 
