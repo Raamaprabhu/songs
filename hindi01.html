@@ -73,7 +73,13 @@ button.on{background:#1c7a3d}
   </div>
 </div>
 
-<script src="disable_rightclick.js"></script>
+<script>
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+});
+</script>
+  
 <script src="https://www.youtube.com/iframe_api"></script>
 
 
