@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sivan Songs</title>
+<style>
+html,body{height:100%;margin:0}
+body{background:#0f1218;color:#f2efe8;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+button,a.btn{font:inherit;font-size:14px;border:0;border-radius:8px;background:#2b3240;color:#f2efe8;padding:10px 8px;min-width:44px;text-decoration:none;text-align:center;box-sizing:border-box}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #ffb703;outline-offset:2px}
+button.on{background:#1c7a3d}
+#top{display:flex;gap:6px;padding:8px 10px;background:#181d26}
+#top .sp{flex:1;font-weight:700;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
+#listView{flex:1;overflow-y:auto;padding:6px 10px 20px}
+#listView p{color:#aaa;font-size:14px;margin:8px 2px}
+.item{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#1b212c;margin:0 0 6px;padding:12px}
+.item .n{min-width:34px;height:34px;border-radius:50%;background:#ffb703;color:#111;font-weight:700;display:flex;align-items:center;justify-content:center}
+.item .t{flex:1;min-width:0}
+.item .t b{display:block;font-weight:600}
+.item .t small{color:#aaa}
+.item .j{font-size:11px;color:#ffb703;border:1px solid #ffb703;border-radius:6px;padding:1px 5px}
+#playView{flex:1;min-height:0;display:none;flex-direction:column}
+#stage{flex:1;min-height:0;position:relative;background:#000}
+#player{position:absolute;inset:0}
+#stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:#bbb;background:#000}
+#info{padding:6px 12px 0;display:flex;gap:10px;align-items:center}
+#cap{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+#yt{color:#ffb703;font-size:13px;white-space:nowrap}
+#nav{background:#181d26;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:6px}
+.row>*{flex:1}
+#autoBtn{flex:1}
+#go{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+#num{width:64px;flex:0 0 auto;font:inherit;font-size:16px;border-radius:8px;border:1px solid #2b3240;background:#0f1218;color:#f2efe8;padding:8px 6px;text-align:center}
+#go button{flex:0 0 auto}
+:fullscreen #top{display:none}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <a class="btn" href="index.html">Home</a>
+  <span class="sp">Sivan Songs</span>
+  <button id="bList">List</button>
+  <button id="bFull">Full</button>
+</div>
+
+<div id="listView">
+  <p>Hindi Songs &mdash; tap a song number to play.</p>
+  <div id="items"></div>
+</div>
+
+<div id="playView">
+  <div id="stage"><div id="player"></div><div id="msg" style="display:none"></div></div>
+  <div id="info"><div id="cap"></div><a id="yt" href="#" target="_blank" rel="noopener">Open on YouTube</a></div>
+  <div id="nav">
+    <div class="row">
+      <button id="bFirst">First</button>
+      <button id="bPrev">Previous</button>
+      <button id="bNext">Next</button>
+      <button id="bLast">Last</button>
+    </div>
+    <div class="row">
+      <button id="bAuto" class="on">Auto Play: ON</button>
+    </div>
+    <div id="go">
+      <input id="num" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="No.">
+      <button id="bGo">Go</button>
+      <button id="bBack">Back</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+});
+</script>
+
+  
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+
+/* ==========================================================
+   EDIT HERE: one line per song.
+   name  = song name       movie = movie / year (optional, can be "")
+   link  = YouTube link (watch?v=..., youtu.be/...)
+   Start a jukebox video at a time by adding &t=90s (or ?t=90s).
+   Keep the quotes and the comma at the end of each line.
+   ========================================================== */
+var SONGS = [
+
+{ name: "Vinayagar Devotional Songs Seergazhi Govindarajan", movie: "", link: "https://youtu.be/qpd5LG4Vfxo?si=PtohnkZMJWziGrVi" },
+{ name: "Kanthar Anubhuthi", movie: "", link: "https://youtu.be/ZZmjF23OCQM?si=_u3Angu4IbyhiIFd" },
+
+
+
+];
+/* ============== end of editable part ============== */
+
+var cur = 0, playing = false;
+var $ = function(id){ return document.getElementById(id); };
+
+var AKEY = "autoplay:" + location.pathname;
+var autoplay = true;
+try{ var sv = localStorage.getItem(AKEY); if(sv !== null) autoplay = (sv === "1"); }catch(e){}
+function paintAuto(){
+  var b = $("bAuto");
+  b.textContent = "Auto Play: " + (autoplay ? "ON" : "OFF");
+  b.className = autoplay ? "on" : "";
+}
+$("bAuto").onclick = function(){
+  autoplay = !autoplay;
+  try{ localStorage.setItem(AKEY, autoplay ? "1" : "0"); }catch(e){}
+  paintAuto();
+};
+paintAuto();
+
+function parse(link){
+  var m = link.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
+  if(!m) return null;
+  var t = link.match(/[?&#]t=(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?/), s = 0;
+  if(t) s = (+t[1]||0)*3600 + (+t[2]||0)*60 + (+t[3]||0);
+  return {id:m[1], start:s};
+}
+var counts = {};
+SONGS.forEach(function(s){ var v=parse(s.link); if(v) counts[v.id]=(counts[v.id]||0)+1; });
+
+function buildList(){
+  var box = $("items"); box.innerHTML = "";
+  SONGS.forEach(function(s,i){
+    var v = parse(s.link), b = document.createElement("button");
+    b.className = "item";
+    b.innerHTML = '<span class="n">'+(i+1)+'</span><span class="t"><b></b><small></small></span>';
+    b.querySelector("b").textContent = s.name;
+    b.querySelector("small").textContent = s.movie || "";
+    if(v && counts[v.id] > 1 && !v.start){
+      var j = document.createElement("span"); j.className = "j"; j.textContent = "jukebox"; b.appendChild(j);
+    }
+    b.onclick = function(){ play(i); };
+    box.appendChild(b);
+  });
+}
+function showList(){ $("playView").style.display="none"; $("listView").style.display="block"; playing=false; }
+
+var ytReady = false, ytPlayer = null, pendingPlay = null;
+function onYouTubeIframeAPIReady(){
+  ytReady = true;
+  ytPlayer = new YT.Player("player", {
+    width: "100%", height: "100%",
+    playerVars: { playsinline: 1, rel: 0, autoplay: 1 },
+    events: {
+      onStateChange: function(e){
+        if(e.data === YT.PlayerState.ENDED && autoplay) play(cur + 1);
+      }
+    }
+  });
+  if(pendingPlay !== null){ var i = pendingPlay; pendingPlay = null; play(i); }
+}
+
+function play(i){
+  if(!SONGS.length) return;
+  cur = (i + SONGS.length) % SONGS.length; playing = true;
+  var s = SONGS[cur], v = parse(s.link);
+  $("listView").style.display="none"; $("playView").style.display="flex";
+  $("cap").textContent = (cur+1)+" / "+SONGS.length+"  "+s.name;
+  $("yt").href = s.link; $("num").value = "";
+  if(!v){
+    $("msg").textContent = "Song "+(cur+1)+" does not have a valid YouTube video link.";
+    $("msg").style.display = "flex";
+    return;
+  }
+  $("msg").style.display = "none";
+  if(!ytReady){ pendingPlay = cur; $("msg").textContent = "Loading player..."; $("msg").style.display="flex"; return; }
+  ytPlayer.loadVideoById({ videoId: v.id, startSeconds: v.start });
+}
+$("bFirst").onclick = function(){ play(0); };
+$("bLast").onclick  = function(){ play(SONGS.length-1); };
+$("bPrev").onclick  = function(){ play(cur-1); };
+$("bNext").onclick  = function(){ play(cur+1); };
+$("num").oninput = function(){ this.value = this.value.replace(/[^0-9]/g,"").slice(0,3); };
+function go(){
+  var n = parseInt($("num").value, 10);
+  if(n>=1 && n<=SONGS.length) play(n-1);
+  else { $("num").value=""; $("num").placeholder = "1-"+SONGS.length; }
+}
+$("bGo").onclick = go;
+$("num").onkeydown = function(e){ if(e.key==="Enter") go(); };
+$("bList").onclick = showList;
+$("bFull").onclick = function(){ try{ var d=document.documentElement; (d.requestFullscreen||d.webkitRequestFullscreen).call(d); }catch(e){} };
+$("bBack").onclick = function(){
+  var fs = document.fullscreenElement || document.webkitFullscreenElement;
+  if(fs){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} }
+  else if(playing){ showList(); }
+};
+buildList();
+</script>
+
+</body>
+</html>
