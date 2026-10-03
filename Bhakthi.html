@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sivan Songs</title>
+<title>Bhakti Stotras and Songs</title>
 <style>
 html,body{height:100%;margin:0}
 body{background:#0f1218;color:#f2efe8;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
@@ -42,13 +42,13 @@ button.on{background:#1c7a3d}
 
 <div id="top">
   <a class="btn" href="index.html">Home</a>
-  <span class="sp">Sivan Songs</span>
+  <span class="sp">Bhakti Stotras and Songs</span>
   <button id="bList">List</button>
   <button id="bFull">Full</button>
 </div>
 
 <div id="listView">
-  <p>Hindi Songs &mdash; tap a song number to play.</p>
+  <p>Bhakti Stotras and Songs &mdash; tap a song number to play.</p>
   <div id="items"></div>
 </div>
 
@@ -93,7 +93,35 @@ document.addEventListener('contextmenu', function(e) {
 var SONGS = [
 
 { name: "Vinayagar Devotional Songs Seergazhi Govindarajan", movie: "", link: "https://youtu.be/qpd5LG4Vfxo?si=PtohnkZMJWziGrVi" },
+{ name: "Ganesha Pancharatnam", movie: "", link: "https://youtu.be/ogcUwadnb1o?si=SfXTaxYYKjSlZn9p" },
+{ name: "Vinayagar Agaval", movie: "", link: "https://youtu.be/udXhFXlM8h8?si=tz2B2hEstKWA5T4e" },
 { name: "Kanthar Anubhuthi", movie: "", link: "https://youtu.be/z2PzUnlc9ew?si=8cgj8PSHdRebBn88" },
+{ name: "Subramanya Bhujangam", movie: "", link: "https://youtu.be/rvzuKj_Q1mY?si=4dyh8-EI5iWTuRpA" },
+{ name: "Kanda Sashti Kavacham", movie: "", link: "https://youtu.be/F5x1tb3HhaY?si=-pDkuGn9daFuMq4H" },
+{ name: "Nada Vindu Kaladi - Thiruppugazh", movie: "", link: "https://youtu.be/zOnzSZvYIiQ?si=ihWveJa5RF0v4gDQ" },
+{ name: "Aditya Hridyam ", movie: "", link: "https://youtu.be/t9ZoUYELWqk?si=BjgQGIHQmQO5wRzo" },
+{ name: "Surya Namaskaram - Arunam", movie: "", link: "https://youtu.be/NaSjtamHFNk?si=hcjHeu0WOQ722hz1" },
+{ name: "Sri Venkatesa Suprabhatham", movie: "", link: "https://youtu.be/krGYd5tZe0A?si=s2BKf6-j-5G8VbcO" },
+{ name: "Sri Vishnu Sahasranamam MS", movie: "", link: "https://youtu.be/09TRKPisWBY?si=4w_yWQJFfRlw5pbX" },
+{ name: "Shri Vishnu Sahasranamavali 1008 Namams", movie: "", link: "https://youtu.be/C4XFqDe9Kk0?si=4_CCMY7c31WINgsD" },
+{ name: "Sri Mahalakshmi Ashtakam", movie: "", link: "https://youtu.be/lCIHz9Nf68Y?si=HrJtyVI-J9DawS5H" },
+{ name: "Lakshmi Ashtothram -MS", movie: "", link: "https://youtu.be/RExJbSFwrPM?si=XMMFFFvr0IjL-KCR" },
+{ name: "Bhagyada Lakshmi Baaramma", movie: "", link: "https://youtu.be/G2nhZBUj55U?si=xcfpAJNhoDV5kAFn" },
+{ name: "Sri Kanakadhara Stotrm", movie: "", link: "https://youtu.be/0FT_tNAO1gI?si=cE5MvuUeCoh_DjVI" },
+{ name: "Aigiri Nandini (Mahishasura Mardhini)", movie: "", link: "https://youtu.be/8ibj8H4UdlY?si=VHGgf3XLsYZ0iv4r" },
+{ name: "Ya  Devi Sarvabhutheshu", movie: "", link: "https://youtu.be/qsYiWnoiX0M?si=xhApe9PI1zSv-IL7" },
+{ name: "Sri Annapurna Ashtakam", movie: "", link: "https://youtu.be/BIsMI-XnmF0?si=_hljSpM68tlkO2d8" },
+{ name: "Soundarya Lahari ", movie: "", link: "https://youtu.be/J7TGe7LZ6RI?si=U5GkoqIwSHJE4DHI" },
+{ name: "Sri Lalitha Sahasranamam", movie: "", link: "https://youtu.be/61RzMckpflk?si=RtLvZOhH8iJ757Op" },
+{ name: "Ya Kundendu - Saraswati Mantra For Knowledge ", movie: "", link: "https://youtu.be/DySzqHwNCxU?si=plEO8PoVS_sm3wmJ" },
+{ name: "Hanuman Chalisa ", movie: "", link: "https://youtu.be/JHOYi2my9DQ?si=QkUUJBzloleZQxm6" },
+{ name: "Sampradaya Bhajan Thotaka Mangalam", movie: "", link: "https://youtu.be/HBEpW-XxiYU?si=C_yHwsB9N2LCZvwJ" },
+{ name: "Dakshinabharatha Sampradaya Bhajans ", movie: "", link: "https://youtu.be/iiMGzPlZfRg?si=iLYVi9Xts-70QsTa" },
+{ name: "Bhagavan Nama Sankirthan Vol.1", movie: "", link: "https://youtu.be/1yCb44NVzuU?si=xIAULJ3Sd3rMdcdE" },
+{ name: "Bhagavan Nama Sankirthan Vol.2", movie: "", link: "https://youtu.be/1W6S-xn744k?si=XCVHu71ezYtt8RrO" },
+{ name: "Dolotsvam By Haridhos Giri", movie: "", link: "https://youtu.be/JcFcEzO_bwg?si=zO8hbHu0r-pAJYcw" },
+{ name: "Sri Radha Kalyanam Part 1 ", movie: "", link: "https://youtu.be/8Yjn9tIZVAY?si=xauROTILgOLeTKdn" },
+{ name: "Sri Radha Kalyanam Part 2", movie: "", link: "https://youtu.be/BjI6nkmF9HM?si=IyLWMBtgoualmBab" },
 
 
 
