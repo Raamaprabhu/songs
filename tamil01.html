@@ -12,6 +12,9 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #ffb7
 button.on{background:#1c7a3d}
 #top{display:flex;gap:6px;padding:8px 10px;background:#181d26}
 #top .sp{flex:1;font-weight:700;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
+#tabs{display:flex;gap:6px;padding:8px 10px 0;background:#181d26}
+#tabs button{flex:1;background:#1b212c;border-radius:8px 8px 0 0;padding:10px 6px;font-weight:600}
+#tabs button.on{background:#ffb703;color:#111}
 #listView{flex:1;overflow-y:auto;padding:6px 10px 20px}
 #listView p{color:#aaa;font-size:14px;margin:8px 2px}
 .item{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#1b212c;margin:0 0 6px;padding:12px}
@@ -39,19 +42,20 @@ button.on{background:#1c7a3d}
 </style>
 </head>
 <body>
-
 <div id="top">
   <a class="btn" href="index.html">Home</a>
   <span class="sp">Tamil Songs</span>
   <button id="bList">List</button>
   <button id="bFull">Full</button>
 </div>
-
+<div id="tabs">
+  <button id="tNew">New Songs (150&ndash;249)</button>
+  <button id="tOld">Old Songs (1&ndash;149)</button>
+</div>
 <div id="listView">
   <p>Tamil Songs &mdash; tap a song number to play.</p>
   <div id="items"></div>
 </div>
-
 <div id="playView">
   <div id="stage"><div id="player"></div><div id="msg" style="display:none"></div></div>
   <div id="info"><div id="cap"></div><a id="yt" href="#" target="_blank" rel="noopener">Open on YouTube</a></div>
@@ -72,104 +76,103 @@ button.on{background:#1c7a3d}
     </div>
   </div>
 </div>
-
-
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-
 /* ==========================================================
-   EDIT HERE: one line per song.
-   name  = song name       movie = movie / year (optional, can be "")
-   link  = YouTube link (watch?v=..., youtu.be/...)
-   Start a jukebox video at a time by adding &t=90s (or ?t=90s).
-   Keep the quotes and the comma at the end of each line.
-   ========================================================== */
+EDIT HERE: one line per song.
+name = song name   movie = movie / year (optional, can be "")
+link = YouTube link (watch?v=..., youtu.be/...)
+Start a jukebox video at a time by adding &t=90s (or ?t=90s).
+Keep the quotes and the comma at the end of each line.
+
+TABS: songs 1-150 = Old Songs, songs 151-250 = New Songs
+(array positions 0-149 and 150-249). Change TABS below to move the split.
+========================================================== */
 var SONGS = [
 { name: "Ilaya Nila Pozhigirathe", movie: "Payanangal Mudivathillai (1982)", link: "https://www.youtube.com/watch?v=AsN_9uXAoNE" },
-{ name: "Then sindhude vaanam", movie: "notknown", link: "https://youtu.be/GpqykUJQb9g?list=RDGpqykUJQb9g" },
-{ name: "Naan Pesa vandhen", movie: "notknown", link: "https://youtu.be/9ZNJncW2220?list=RD9ZNJncW2220" },
-{ name: "Ilakkanam Maarutho", movie: "notknown", link: "https://youtu.be/CVtHj0N3K0g?si=PO0br7YUC4Zp7LMd" },
-{ name: "Samsaaram enbathu veenai", movie: "notknown", link: "https://youtu.be/78l4yD0V_ZU?si=M5Pil4StaeheRpWp" },
-{ name: "Varavendum vaazhkaiyil vasantham", movie: "notknown", link: "https://youtu.be/--QAPQ0dcyI?si=jS0jGgU5UjEm898L" },
-{ name: "Oru vaanavil pole en vaazhvile", movie: "notknown", link: "https://youtu.be/ibFKU_jb9Es?si=wsN--ltMGI2TKmBD" },
-{ name: "Uravugal thodarkathai", movie: "notknown", link: "https://youtu.be/p91TcdrGsg0?si=lTpp1iYy9radOv8w" },
-{ name: "Thaalaattuthe vaanam", movie: "notknown", link: "https://youtu.be/OudaAphMhfQ?si=4RS0l46HO0w9iEQ3" },
-{ name: "Aayiram Malargale", movie: "notknown", link: "https://youtu.be/LArHxk4qvD8?si=23jp_d5SDhLiiMu_" },
-{ name: "Mayile Mayile un thogai enge", movie: "notknown", link: "https://youtu.be/gNprC2x3GKY?si=xexOFk4WQD0yxmhq" },
-{ name: "Mazhai tharume en megam", movie: "notknown", link: "https://youtu.be/-rxPx0fneeU?si=qqOj0z9zTYiRFXhg" },
-{ name: "Vaan Nila nila alla", movie: "notknown", link: "https://youtu.be/UhOeCq602No?si=wPWzq9khFjJr6hTP" },
-{ name: "Yaarathu sollamal nenjalli", movie: "notknown", link: "https://youtu.be/D3hDGNMNPg8?si=h6HD8UMGMVUXTvrW" },
-{ name: "Unnidathil ennai koduthen", movie: "notknown", link: "https://youtu.be/IWqy7MlBOGY?si=SbDzaOQELtCOOlHO" },
-{ name: "Yamuna nathi enge raadhai", movie: "notknown", link: "https://youtu.be/2wbatjKw2Wk?si=YClJ9pMUwRaW_r3p" },
-{ name: "Pottu vaitha mugamo", movie: "notknown", link: "https://youtu.be/de6w85QIP3Y?si=1K81pQUeXEh14hYa" },
-{ name: "Anbu nadamadum kalaikoodame", movie: "notknown", link: "https://youtu.be/YsDde_RJdfA?si=EEaDqlspr73WhLeH" },
-{ name: "Agaram ippo sigaram aachu", movie: "notknown", link: "https://youtu.be/D7T7zuaESzo?si=UBSkgDhkYJb8BMzZ" },
-{ name: "Idho Idho en pallavi", movie: "notknown", link: "https://youtu.be/rdanqJY_fzg?si=IWjQAtX3wqX2kHf8" },
-{ name: "Paramsivan kazhuthilirunthu", movie: "notknown", link: "https://youtu.be/Xe_RO0avvdc?si=9RBPydQAL4XoJWnE" },
-{ name: "Pon vaanam panneer", movie: "notknown", link: "https://youtu.be/bSSzWmlOsuw?si=re9ELhxm3QBuLg25" },
-{ name: "Oh vasantha raaja", movie: "notknown", link: "https://youtu.be/EbV3dn79dd4?si=srt7EEOPRYslDH4D" },
-{ name: "Kaalidasan kannadasan", movie: "notknown", link: "https://youtu.be/vzsc_Ro0lXs?si=C3AGIvP4Hk1GZFEO" },
-{ name: "Kavithai arangerum neram", movie: "notknown", link: "https://youtu.be/2LSt3E7LVeI?si=rMzFF-AhnvqcOMFT" },
-{ name: "Mayakkamenna intha mounam", movie: "notknown", link: "https://youtu.be/bQ6kxOO9ZRg?si=CU21F_1nINzDWPts" },
-{ name: "Unnaithane thanjam enru", movie: "notknown", link: "https://youtu.be/MFVnmfCqVXg?si=_o7aVe2d_S-wvYgp" },
-{ name: "Kaadalin deepam onru", movie: "notknown", link: "https://youtu.be/e61Om4hO6oI?si=NQp9N8fWGQYOQnQB" },
-{ name: "Thene then paandi meene", movie: "notknown", link: "https://youtu.be/MFnpN-Bo9r0?si=lZZAp83NiOeizI-7" },
-{ name: "Raja raja sozhan naan", movie: "notknown", link: "https://youtu.be/xylPzAFAjz0?si=GcUrSQyMfLTdSzZN" },
-{ name: "Vennilave Vennilave vinnai", movie: "notknown", link: "https://youtu.be/3TVvRETczto?si=ZBPUiXUEHokRktcL" },
-{ name: "Poove sempoove", movie: "notknown", link: "https://youtu.be/QLwDRmHLB7k?si=LvWgEd0SObk7cNS_" },
-{ name: "Senthazham poovil vanthadum", movie: "notknown", link: "https://youtu.be/8e17naoTrmE?si=MFnUs3LKWAPjYa7-" },
-{ name: "Pon maalai pozhuthu", movie: "notknown", link: "https://youtu.be/0QevuF0mw30?si=_ifVJ5TSvjhu672P" },
-{ name: "Poongathave thaazh thiravai", movie: "notknown", link: "https://youtu.be/mccm7TcIKgk?si=nHAtXHOtMyjW_xDm" },
-{ name: "Naane naana yarothana", movie: "notknown", link: "https://youtu.be/YaemqYLpRY8?si=v6LbFLTru--t69BP" },
-{ name: "Unnai naan parthathu vennila velaiyil", movie: "notknown", link: "https://youtu.be/LZK-BG6CmyQ?si=MTYXJA521G3Zsrij" },
-{ name: "Helo my dear wrong number", movie: "notknown", link: "https://youtu.be/C9aQGlObyl4?si=0ixuX8Uzr8qkNvvk" },
-{ name: "Kaadhal vilaiyada kattil", movie: "notknown", link: "https://youtu.be/_kx8igoGl5c?si=XmmXu7YfmF6WdszG" },
-{ name: "Neela vaana odaiyil", movie: "notknown", link: "https://youtu.be/0Ka4kLQB25M?si=OSj45XQGicwgDZ5S" },
-{ name: "Putham puthu kaalai", movie: "notknown", link: "https://youtu.be/mRWj5knSvC0?si=TiPG2QRFVJtUaxjb" },
-{ name: "Keeravaani iravile nanaivile", movie: "notknown", link: "https://youtu.be/Y-cpr3pfPi0?si=HOMPF_7th53APHNE" },
-{ name: "Kalyana then nila", movie: "notknown", link: "https://youtu.be/ajMGP__XJng?si=gPQJrx3PQzDlkZSg" },
-{ name: "Aagaya vennilave tharaimeethu", movie: "notknown", link: "https://youtu.be/gmSVmzvCQ7E?si=j-PVVsH-RGRke5nO" },
-{ name: "Malare kurinji malare", movie: "notknown", link: "https://youtu.be/xyco7NyCA3o?si=BPw7oeSuw94CDvfk" },
-{ name: "Poomaalaiyil or malligai", movie: "notknown", link: "https://youtu.be/N4F0poJiGok?si=CDiW3jaW3QFDmRnX" },
-{ name: "Junior.. Irumanam konda", movie: "notknown", link: "https://youtu.be/UAm3byX6Z5Y?si=XawMJcVIXxtP59rS" },
-{ name: "jagame manthiram ", movie: "notknown", link: "https://youtu.be/bIipB2osrDw?si=WEY3DIteB0BqCkOp" },
-{ name: "Thakita thathimi thakita ", movie: "notknown", link: "https://youtu.be/jH5B7bRwQFo?si=NWpYBfqzQYmxl89_" },
-{ name: "Kanne kalai maane", movie: "notknown", link: "https://youtu.be/rtgU6lIBz5A?si=ZEIh7KvorLsTU5Qc" },
-{ name: "Sangathil padatha kavithai", movie: "notknown", link: "https://youtu.be/Whe6IIBW2Hs?si=CFPSquB3SGnQ1FTC" },
-{ name: "Margazhi Paniyil", movie: "notknown", link: "https://youtu.be/xhs-0EuMyGo?si=EyHR0Q1mhx0C0BzS" },
-{ name: "Enakkoru Kadali irukkindral", movie: "notknown", link: "https://youtu.be/4_cbMMQ42Uc?si=IbbjMVjenMUyvzxI" },
-{ name: "Naan endral athu avaulum naanum", movie: "notknown", link: "https://youtu.be/3HWVnShMYRY?si=x6U2xjVPBFXukD2H" },
-{ name: "Ullam rendum ondrai ondru", movie: "notknown", link: "https://youtu.be/QS3ceuP8qfE?si=3mQNQs48OzlHG48E" },
-{ name: "Kaadhalin Pon Veedhiyil", movie: "notknown", link: "https://youtu.be/Evy7W7yXw6E?si=7yYsOuq2Huejvz8Q" },
-{ name: "Indru Vantha Intha Mayakkam", movie: "notknown", link: "https://youtu.be/Ni2VYaTIOcw?si=xDI9esEGUMP9g1XW" },
-{ name: "Thotta Idam Ellam", movie: "notknown", link: "https://youtu.be/yc1lkTSsp9k?si=HvRoJPpb4P_C2b-n" },
-{ name: "Neela Nayanangalil", movie: "notknown", link: "https://youtu.be/mDhpfmgqqn8?si=rbjKOEQH00NP4w4J" },
-{ name: "Aval oru navarasa naadagam", movie: "notknown", link: "https://youtu.be/rb2RCO5EanA?si=3Ypsw2jQt5_lFGlv" },
-{ name: "Oruvar Meethu", movie: "notknown", link: "https://youtu.be/7QQ-ZpqwGG8?si=p2nzl5bJ_-k9dV0c" },
-{ name: "Sirippil undagum ragathile", movie: "notknown", link: "https://youtu.be/klbP_X-6CVw?si=82zKuWhu0-9-U2Db" },
-{ name: "Rasathi onna kanatha", movie: "notknown", link: "https://youtu.be/4zIOfjx6k6w?si=5-vYpd_gcVRXvAHQ" },
-{ name: "Rasathi onna kanatha", movie: "notknown", link: "https://youtu.be/4zIOfjx6k6w?si=5-vYpd_gcVRXvAHQ" },
-{ name: "Oodhaa Kalaru", movie: "notknown", link: "https://youtu.be/5_Q9NaBq1RE?si=YR9ObIFutPQo7nE8" },
-{ name: "அழகாய் பூக்குதே", movie: "notknown", link: "https://youtu.be/TJm0P9GinpU?si=gPQpUcLl_td8U5ec" },
-{ name: "Sollathan Ninaikiren", movie: "notknown", link: "https://youtu.be/6JfoFOnFTGU?si=iroKsa-xvaerBCj5" },
-{ name: "Oru Naal Unnodu Orunaal", movie: "notknown", link: "https://youtu.be/N7U7M8YPFTg?si=5q5r9sr8Z6glae6v" },
-{ name: "Manjal nilavuku indru", movie: "notknown", link: "https://youtu.be/w7gyXm7vPgk?si=FeB_mZJa6qkHvDy_" },
-{ name: "Hey Paadal Ondru", movie: "notknown", link: "https://youtu.be/d79oUMI5QU8?si=GsoNfCq4h1HAcHbM" },
-{ name: "Kavithaigal Sollava", movie: "notknown", link: "https://youtu.be/R3NXKf_6pFo?si=Vkhx6IFRNPQhLlHf" },
+{ name: "Then sindhude vaanam", movie: "", link: "https://youtu.be/GpqykUJQb9g?list=RDGpqykUJQb9g" },
+{ name: "Naan Pesa vandhen", movie: "", link: "https://youtu.be/9ZNJncW2220?list=RD9ZNJncW2220" },
+{ name: "Ilakkanam Maarutho", movie: "", link: "https://youtu.be/CVtHj0N3K0g?si=PO0br7YUC4Zp7LMd" },
+{ name: "Samsaaram enbathu veenai", movie: "", link: "https://youtu.be/78l4yD0V_ZU?si=M5Pil4StaeheRpWp" },
+{ name: "Varavendum vaazhkaiyil vasantham", movie: "", link: "https://youtu.be/--QAPQ0dcyI?si=jS0jGgU5UjEm898L" },
+{ name: "Oru vaanavil pole en vaazhvile", movie: "", link: "https://youtu.be/ibFKU_jb9Es?si=wsN--ltMGI2TKmBD" },
+{ name: "Uravugal thodarkathai", movie: "", link: "https://youtu.be/p91TcdrGsg0?si=lTpp1iYy9radOv8w" },
+{ name: "Thaalaattuthe vaanam", movie: "", link: "https://youtu.be/OudaAphMhfQ?si=4RS0l46HO0w9iEQ3" },
+{ name: "Aayiram Malargale", movie: "", link: "https://youtu.be/LArHxk4qvD8?si=23jp_d5SDhLiiMu_" },
+{ name: "Mayile Mayile un thogai enge", movie: "", link: "https://youtu.be/gNprC2x3GKY?si=xexOFk4WQD0yxmhq" },
+{ name: "Mazhai tharume en megam", movie: "", link: "https://youtu.be/-rxPx0fneeU?si=qqOj0z9zTYiRFXhg" },
+{ name: "Vaan Nila nila alla", movie: "", link: "https://youtu.be/UhOeCq602No?si=wPWzq9khFjJr6hTP" },
+{ name: "Yaarathu sollamal nenjalli", movie: "", link: "https://youtu.be/D3hDGNMNPg8?si=h6HD8UMGMVUXTvrW" },
+{ name: "Unnidathil ennai koduthen", movie: "", link: "https://youtu.be/IWqy7MlBOGY?si=SbDzaOQELtCOOlHO" },
+{ name: "Yamuna nathi enge raadhai", movie: "", link: "https://youtu.be/2wbatjKw2Wk?si=YClJ9pMUwRaW_r3p" },
+{ name: "Pottu vaitha mugamo", movie: "", link: "https://youtu.be/de6w85QIP3Y?si=1K81pQUeXEh14hYa" },
+{ name: "Anbu nadamadum kalaikoodame", movie: "", link: "https://youtu.be/YsDde_RJdfA?si=EEaDqlspr73WhLeH" },
+{ name: "Agaram ippo sigaram aachu", movie: "", link: "https://youtu.be/D7T7zuaESzo?si=UBSkgDhkYJb8BMzZ" },
+{ name: "Idho Idho en pallavi", movie: "", link: "https://youtu.be/rdanqJY_fzg?si=IWjQAtX3wqX2kHf8" },
+{ name: "Paramsivan kazhuthilirunthu", movie: "", link: "https://youtu.be/Xe_RO0avvdc?si=9RBPydQAL4XoJWnE" },
+{ name: "Pon vaanam panneer", movie: "", link: "https://youtu.be/bSSzWmlOsuw?si=re9ELhxm3QBuLg25" },
+{ name: "Oh vasantha raaja", movie: "", link: "https://youtu.be/EbV3dn79dd4?si=srt7EEOPRYslDH4D" },
+{ name: "Kaalidasan kannadasan", movie: "", link: "https://youtu.be/vzsc_Ro0lXs?si=C3AGIvP4Hk1GZFEO" },
+{ name: "Kavithai arangerum neram", movie: "", link: "https://youtu.be/2LSt3E7LVeI?si=rMzFF-AhnvqcOMFT" },
+{ name: "Mayakkamenna intha mounam", movie: "", link: "https://youtu.be/bQ6kxOO9ZRg?si=CU21F_1nINzDWPts" },
+{ name: "Unnaithane thanjam enru", movie: "", link: "https://youtu.be/MFVnmfCqVXg?si=_o7aVe2d_S-wvYgp" },
+{ name: "Kaadalin deepam onru", movie: "", link: "https://youtu.be/e61Om4hO6oI?si=NQp9N8fWGQYOQnQB" },
+{ name: "Thene then paandi meene", movie: "", link: "https://youtu.be/MFnpN-Bo9r0?si=lZZAp83NiOeizI-7" },
+{ name: "Raja raja sozhan naan", movie: "", link: "https://youtu.be/xylPzAFAjz0?si=GcUrSQyMfLTdSzZN" },
+{ name: "Vennilave Vennilave vinnai", movie: "", link: "https://youtu.be/3TVvRETczto?si=ZBPUiXUEHokRktcL" },
+{ name: "Poove sempoove", movie: "", link: "https://youtu.be/QLwDRmHLB7k?si=LvWgEd0SObk7cNS_" },
+{ name: "Senthazham poovil vanthadum", movie: "", link: "https://youtu.be/8e17naoTrmE?si=MFnUs3LKWAPjYa7-" },
+{ name: "Pon maalai pozhuthu", movie: "", link: "https://youtu.be/0QevuF0mw30?si=_ifVJ5TSvjhu672P" },
+{ name: "Poongathave thaazh thiravai", movie: "", link: "https://youtu.be/mccm7TcIKgk?si=nHAtXHOtMyjW_xDm" },
+{ name: "Naane naana yarothana", movie: "", link: "https://youtu.be/YaemqYLpRY8?si=v6LbFLTru--t69BP" },
+{ name: "Unnai naan parthathu vennila velaiyil", movie: "", link: "https://youtu.be/LZK-BG6CmyQ?si=MTYXJA521G3Zsrij" },
+{ name: "Helo my dear wrong number", movie: "", link: "https://youtu.be/C9aQGlObyl4?si=0ixuX8Uzr8qkNvvk" },
+{ name: "Kaadhal vilaiyada kattil", movie: "", link: "https://youtu.be/_kx8igoGl5c?si=XmmXu7YfmF6WdszG" },
+{ name: "Neela vaana odaiyil", movie: "", link: "https://youtu.be/0Ka4kLQB25M?si=OSj45XQGicwgDZ5S" },
+{ name: "Putham puthu kaalai", movie: "", link: "https://youtu.be/mRWj5knSvC0?si=TiPG2QRFVJtUaxjb" },
+{ name: "Keeravaani iravile nanaivile", movie: "", link: "https://youtu.be/Y-cpr3pfPi0?si=HOMPF_7th53APHNE" },
+{ name: "Kalyana then nila", movie: "", link: "https://youtu.be/ajMGP__XJng?si=gPQJrx3PQzDlkZSg" },
+{ name: "Aagaya vennilave tharaimeethu", movie: "", link: "https://youtu.be/gmSVmzvCQ7E?si=j-PVVsH-RGRke5nO" },
+{ name: "Malare kurinji malare", movie: "", link: "https://youtu.be/xyco7NyCA3o?si=BPw7oeSuw94CDvfk" },
+{ name: "Poomaalaiyil or malligai", movie: "", link: "https://youtu.be/N4F0poJiGok?si=CDiW3jaW3QFDmRnX" },
+{ name: "Junior.. Irumanam konda", movie: "", link: "https://youtu.be/UAm3byX6Z5Y?si=XawMJcVIXxtP59rS" },
+{ name: "jagame manthiram ", movie: "", link: "https://youtu.be/bIipB2osrDw?si=WEY3DIteB0BqCkOp" },
+{ name: "Thakita thathimi thakita ", movie: "", link: "https://youtu.be/jH5B7bRwQFo?si=NWpYBfqzQYmxl89_" },
+{ name: "Kanne kalai maane", movie: "", link: "https://youtu.be/rtgU6lIBz5A?si=ZEIh7KvorLsTU5Qc" },
+{ name: "Sangathil padatha kavithai", movie: "", link: "https://youtu.be/Whe6IIBW2Hs?si=CFPSquB3SGnQ1FTC" },
+{ name: "Margazhi Paniyil", movie: "", link: "https://youtu.be/xhs-0EuMyGo?si=EyHR0Q1mhx0C0BzS" },
+{ name: "Enakkoru Kadali irukkindral", movie: "", link: "https://youtu.be/4_cbMMQ42Uc?si=IbbjMVjenMUyvzxI" },
+{ name: "Naan endral athu avaulum naanum", movie: "", link: "https://youtu.be/3HWVnShMYRY?si=x6U2xjVPBFXukD2H" },
+{ name: "Ullam rendum ondrai ondru", movie: "", link: "https://youtu.be/9gnXs774CRA?si=eM55fbzpbLCeWbYu" },
+{ name: "Kaadhalin Pon Veedhiyil", movie: "", link: "https://youtu.be/Evy7W7yXw6E?si=7yYsOuq2Huejvz8Q" },
+{ name: "Indru Vantha Intha Mayakkam", movie: "", link: "https://youtu.be/Ni2VYaTIOcw?si=xDI9esEGUMP9g1XW" },
+{ name: "Thotta Idam Ellam", movie: "", link: "https://youtu.be/yc1lkTSsp9k?si=HvRoJPpb4P_C2b-n" },
+{ name: "Neela Nayanangalil", movie: "", link: "https://youtu.be/mDhpfmgqqn8?si=rbjKOEQH00NP4w4J" },
+{ name: "Aval oru navarasa naadagam", movie: "", link: "https://youtu.be/rb2RCO5EanA?si=3Ypsw2jQt5_lFGlv" },
+{ name: "Oruvar Meethu", movie: "", link: "https://youtu.be/7QQ-ZpqwGG8?si=p2nzl5bJ_-k9dV0c" },
+{ name: "Sirippil undagum ragathile", movie: "", link: "https://youtu.be/klbP_X-6CVw?si=82zKuWhu0-9-U2Db" },
+{ name: "Rasathi onna kanatha", movie: "", link: "https://youtu.be/4zIOfjx6k6w?si=5-vYpd_gcVRXvAHQ" },
+{ name: "Oodhaa Kalaru", movie: "", link: "https://youtu.be/5_Q9NaBq1RE?si=YR9ObIFutPQo7nE8" },
+{ name: "அழகாய் பூக்குதே", movie: "", link: "https://youtu.be/TJm0P9GinpU?si=gPQpUcLl_td8U5ec" },
+{ name: "Sollathan Ninaikiren", movie: "", link: "https://youtu.be/6JfoFOnFTGU?si=iroKsa-xvaerBCj5" },
+{ name: "Oru Naal Unnodu Orunaal", movie: "", link: "https://youtu.be/N7U7M8YPFTg?si=5q5r9sr8Z6glae6v" },
+{ name: "Manjal nilavuku indru", movie: "", link: "https://youtu.be/w7gyXm7vPgk?si=FeB_mZJa6qkHvDy_" },
+{ name: "Hey Paadal Ondru", movie: "", link: "https://youtu.be/d79oUMI5QU8?si=GsoNfCq4h1HAcHbM" },
+{ name: "Kavithaigal Sollava", movie: "", link: "https://youtu.be/R3NXKf_6pFo?si=Vkhx6IFRNPQhLlHf" },
 { name: "Ponnenna poovenna kanne", movie: "Alaigal", link: "https://youtu.be/EdDTS3l9KCQ?si=qwLx2kMLbYyjNiYz" },
 { name: "Thendralukku Endrum Vayathu", movie: "Payanam", link: "https://youtu.be/XcBQ58qEqcc?si=J06PXNCuHR3WBCGR" },
-{ name: "Odam Kadal Odum ", movie: "notknown", link: "https://youtu.be/GngQfJA4Oss?si=fAcqmcswwcwTZdwZ" },
+{ name: "Odam Kadal Odum ", movie: "", link: "https://youtu.be/GngQfJA4Oss?si=fAcqmcswwcwTZdwZ" },
 { name: "காதல் விளையாட", movie: "Kanmani Raja", link: "https://youtu.be/_kx8igoGl5c?si=J2JGnkXj9PzqU5bR" },
-{ name: "Yedho Oru Nadhiyil Naan ", movie: "Enna Thavam Seithen", link: "https://youtu.be/qfA6VXnLrQM?si=aEJ5guI1QJoPcxJz" },
+{ name: "Yedho Oru Nadhiyil Naan ", movie: "Enna Thavam Seithen", link: "https://youtu.be/qfA6VXnLrQM?si=aEJ5guI1QJoPcxJz" },
 { name: "Mangayaril Maharani", movie: "Avalukkenru or manam", link: "https://youtu.be/gbrTIwhxdhk?si=MH9RW2h1c1WefxnK" },
-{ name: "Aayiram Ninaivu ", movie: "Avalukkenru or manam", link: "https://youtu.be/gh8W-51V2vs?si=qDzL0uyyxabZ60wG" },
+{ name: "Aayiram Ninaivu ", movie: "Avalukkenru or manam", link: "https://youtu.be/gh8W-51V2vs?si=qDzL0uyyxabZ60wG" },
 { name: "கங்கை நதியோரம்", movie: "வரப்பிரசாதம்", link: "https://youtu.be/ye2G2pU48bU?si=VwzG38C-OgHYRhzf" },
 { name: "Ponaana Manam", movie: "Thirumangalyam", link: "https://youtu.be/OcItMofJs4g?si=s3IP3kf8ozqd2MOz" },
 { name: "காதல் காதல் என்று பேச", movie: "Utharavindri ulle vaa", link: "https://youtu.be/6WZwIDk9C5g?si=bvB1eNzhKNQZOEaQ" },
 { name: "மாதமோ ஆவணி", movie: "Utharavindri ulle vaa", link: "https://youtu.be/oqNOWn77EW4?si=MHJdl6an2MD6zeEf" },
 { name: "Ilamai Nattiya Salai", movie: "Kalyanamam Kalyanam", link: "https://youtu.be/9EO5tSbB2Lk?si=fGeSwY9hetIPuPIZ" },
-{ name: "Kanden Kalyanap Pen Pondra", movie: "notknown", link: "https://youtu.be/5pXBJ-irfWk?si=wDYLUPq4uzmNEiSq" },
-{ name: "Kaanchi Pattuduthi ", movie: "Vayasu Ponnu", link: "https://youtu.be/V3K3A70LHP0?si=wjtSjDEN1ifULO-a" },
+{ name: "Kanden Kalyanap Pen Pondra", movie: "", link: "https://youtu.be/5pXBJ-irfWk?si=wDYLUPq4uzmNEiSq" },
+{ name: "Kaanchi Pattuduthi ", movie: "Vayasu Ponnu", link: "https://youtu.be/V3K3A70LHP0?si=wjtSjDEN1ifULO-a" },
 { name: "Arambakalam Orupakkathalam Athuthaan", movie: "Payanam", link: "https://youtu.be/yvbDJYvl1r0?si=70wd5gzoCCNKWal2" },
 { name: "Ullathil nooru ninaithen", movie: "MAPPILLAI AZHAIPPU", link: "https://youtu.be/b0uYnVjZ498?si=VTnwrlgi-zz6dLhZ" },
 { name: "Kannanai ninaikatha naal illaiye", movie: "Seer Varisai", link: "https://youtu.be/6ynZk2WmDXY?si=iYoEAWJZ743Yes-K" },
@@ -179,7 +182,7 @@ var SONGS = [
 { name: "Vazhvil Sowbaggiyam Vanthathu", movie: "Thoondil meen", link: "https://youtu.be/2hTp8rzOfzg?si=nvrXgmIw38dvIMo7" },
 { name: "Padumpothu naan thendral kaatru", movie: "Netru indru naalai", link: "https://youtu.be/GTmpNISvr2k?si=4sAb9d5QHcaEjbna" },
 { name: "Ponnukkenna Azhagu", movie: "En Magan", link: "https://youtu.be/QM50PXfvUKY?si=WdDsvORwzpag97TH" },
-{ name: "Aval Oru Pachai Kuzhanthai ", movie: "Nee Oru Maharani", link: "https://youtu.be/Wul9nC7iLmo?si=rtD_TYcw-cdkXJXs" },
+{ name: "Aval Oru Pachai Kuzhanthai ", movie: "Nee Oru Maharani", link: "https://youtu.be/Wul9nC7iLmo?si=rtD_TYcw-cdkXJXs" },
 { name: "ஏரிலே ஒரு கஷ்மீர் ரோஜா", movie: "Madhana Maaligai", link: "https://youtu.be/irG7N402sRY?si=O9z1Rhcjb-u2vqEj" },
 { name: "Pon Enbatho Poo Enbatho", movie: "Annap paravai", link: "https://youtu.be/KIm0bjr_E1U?si=x9LEwMRU1vFcBG7w" },
 { name: "Ponnendrum Poovendrum Thenenrum Solveno", movie: "Nilave nee satchi", link: "https://youtu.be/Fa78j7UYBvU?si=R4nYRGi32_JgGV6O" },
@@ -235,15 +238,129 @@ var SONGS = [
 { name: "O Butterfly", movie: "Meera", link: "https://www.youtube.com/watch?v=pU3wNosqqLU" },
 { name: "Maanguyilae", movie: " Karakattakkaran", link: "https://www.youtube.com/watch?v=_gCGJELNqpQ" },
 { name: "Viliyile Malarnthathu", movie: "Bhuvana Oru Kelvi Kuri", link: "https://www.youtube.com/watch?v=6KrG9aDqt3E" },
+
+{ name: " Neeyum Naanum Anbe", movie: "", link: "https://youtu.be/UeMj_zVwPFo?si=driczdPcp2yh1dD_" },
+{ name: " Oh Shala Oh Shala ", movie: "", link: "https://youtu.be/2iix1qBff4E?si=xFZiKfNe2r59csCX" },
+{ name: " Roja Kadale", movie: "", link: "https://youtu.be/9iX4HQeW1aM?si=LoozmASKKsI-R1I5" },
+{ name: " Velicha Poove", movie: "", link: "https://www.youtube.com/watch?v=qOBCyC0khCc" },
+{ name: " Vizhigalil Oru Vaanavil ", movie: "", link: "https://youtu.be/osY54GT0T_8?si=W0r08GzcQtGAgWwC" },
+{ name: " Pasappukkalli", movie: "", link: "https://www.youtube.com/watch?v=dxe9OyoyCJM" },
+{ name: "Aariro aaraariro", movie: "", link: "https://youtu.be/Jbn8Lc7WN-U?si=ZKLwxtbxyjCxP9NO" },
+{ name: "Aaruyirae", movie: "", link: "https://www.youtube.com/watch?v=_f8dMFzYRCE" },
+{ name: "Aasa Kooda", movie: "", link: "https://www.youtube.com/watch?v=a3Ue-LN5B9U" },
+{ name: "Aasai Oru Pulveli", movie: "", link: "https://www.youtube.com/watch?v=HpfYhGRHQb0" },
+{ name: "Aasai Varame", movie: "", link: "https://www.youtube.com/watch?v=xwUz3tSlMZ4" },
+{ name: "Aathadi Aathadi", movie: "", link: "https://www.youtube.com/watch?v=MGjBQDrtGbA" },
+{ name: "Aathi", movie: "", link: "https://www.youtube.com/watch?v=YQ6ShcAU_dQ" },
+{ name: "Aattakkari Maman Ponnu", movie: "", link: "https://www.youtube.com/watch?v=RWh6CHXdTjU" },
+{ name: "Ada Bommale", movie: "", link: "https://www.youtube.com/watch?v=27QmkvKQLDk" },
+{ name: "Adi Alaye", movie: "", link: "https://www.youtube.com/watch?v=czDtz8aMh-Q" },
+{ name: "Adiye Unna Paathida", movie: "", link: "https://www.youtube.com/watch?v=zYF3BEKiYI0" },
+{ name: "Agasatha", movie: "", link: "https://www.youtube.com/watch?v=Mss5s9xgraQ" },
+{ name: "Agayam Theepiditha", movie: "", link: "https://www.youtube.com/watch?v=9VFv0ZSFRw8" },
+{ name: "Ammadi Un Azhagu", movie: "", link: "https://www.youtube.com/watch?v=N6jFnvtVVhs" },
+{ name: "Andhi Vaanil", movie: "", link: "https://www.youtube.com/watch?v=9xWpMurrtGw" },
+{ name: "Annakili ", movie: "", link: "https://youtu.be/AYLWPzco89I?si=Cfyw8KMAP7W2S9U-" },
+{ name: "Ava Kanna Paatha ", movie: "", link: "https://www.youtube.com/watch?v=ek2KIMWIsV0" },
+{ name: "Ayyo Adi Aathe ", movie: "", link: "https://youtu.be/qoFIwuo9vQM?si=-LUxFiY3HeTkTgjm" },
+{ name: "Azhagooril", movie: "", link: "https://www.youtube.com/watch?v=1D5o1tuq0yI" },
+{ name: "Beer", movie: "", link: "https://www.youtube.com/watch?v=ONQ7psdX-RA" },
+{ name: "Bodhai Kaname", movie: "", link: "https://www.youtube.com/watch?v=jxSo0EE-D2c" },
+{ name: "Chillendra Chillendra", movie: "", link: "https://www.youtube.com/watch?v=2bkWX3pf92Y" },
+{ name: "Chinna Chinna Cheenikkallu", movie: "", link: "https://www.youtube.com/watch?v=Hjf2vmYNGiY" },
+{ name: "Darshana", movie: "", link: "https://youtu.be/gtd0COLP_oo?si=pmWk9MoL4TmKKCK9" },
+{ name: "Dhee", movie: "", link: "https://www.youtube.com/watch?v=B2uqmomb1Cs" },
+{ name: "Dheema", movie: "", link: "https://www.youtube.com/watch?v=067FqlIxEWA" },
+{ name: "Elangaathu Veesudhey ", movie: "", link: "https://www.youtube.com/watch?v=q6ke5fEmSSU" },
+{ name: "En Jeevan", movie: "", link: "https://youtu.be/LoPf32nKYb8?si=MGUogaePxuHHc0t9" },
+{ name: "En Kannu Kulla", movie: "", link: "https://www.youtube.com/watch?v=Zllqm2zHmpA" },
+{ name: "En Rojaa Neeye", movie: "", link: "https://www.youtube.com/watch?v=2m9esh3PG98" },
+{ name: "Enakena", movie: "", link: "https://www.youtube.com/watch?v=wEBQqQ8apdI" },
+{ name: "Enakke Enakkaa", movie: "", link: "https://www.youtube.com/watch?v=tck__K8H3TE" },
+{ name: "Enna Nenache ", movie: "", link: "https://www.youtube.com/watch?v=_4q_wVDoJk8" },
+{ name: "Enna Sugam", movie: "", link: "https://www.youtube.com/watch?v=NsHWT6H3Gbs" },
+{ name: "Enthaaraa Enthaaraa", movie: "", link: "https://www.youtube.com/watch?v=h1BGDHumhj4" },
+{ name: "Eppadi Vandhaayo", movie: "", link: "https://www.youtube.com/watch?v=r3oAMDsC-8Y" },
+{ name: "Esa Kaaththa", movie: "", link: "https://www.youtube.com/watch?v=sxJPpFwcFh8" },
+{ name: "Ethana Saami", movie: "", link: "https://www.youtube.com/watch?v=xpWqfS8Su_Y" },
+{ name: "Ezhutha Kadhaiyo", movie: "", link: "https://www.youtube.com/watch?v=Q6mcDZui71I" },
+{ name: "Ice Katti Kuruvi", movie: "", link: "https://youtu.be/Qe9DT2Xl4dI?si=zLG3AbGlJ95K_crr" },
+{ name: "Idhayaa ", movie: "", link: "https://www.youtube.com/watch?v=aphq1JOt8WE" },
+{ name: "Idhayam ", movie: "", link: "https://www.youtube.com/watch?v=4deZ7o3zfmI" },
+{ name: "Ilakozhiye", movie: "", link: "https://www.youtube.com/watch?v=s7fpixCzxBc" },
+{ name: "Imaye", movie: "", link: "https://www.youtube.com/watch?v=MBMiGAFoeMQ" },
+{ name: "Iragai Poley", movie: "", link: "https://www.youtube.com/watch?v=LhrFFOz3ZEA" },
+{ name: "Iravingu Theevai", movie: "", link: "https://www.youtube.com/watch?v=b3-lyX9O6kY" },
+{ name: "Jaalakaari", movie: "", link: "https://www.youtube.com/watch?v=w_XSgUCn_v0" },
+{ name: "Jal Jal Jal Osai", movie: "", link: "https://www.youtube.com/watch?v=lBxDY7ocS8o" },
+{ name: "Kaadhal Ennulle", movie: "", link: "https://www.youtube.com/watch?v=bFew8mgQJ9o" },
+{ name: "Kaal Mulaitha Poovae", movie: "", link: "https://www.youtube.com/watch?v=7InDJI3ll4s" },
+{ name: "Kaalathukkum Nee Venum", movie: "", link: "https://www.youtube.com/watch?v=SNAYU51_O-w" },
+{ name: "Kadhal Aasai", movie: "", link: "https://www.youtube.com/watch?v=UdZzW6QzN-s" },
+{ name: "Kadhal Anukkal ", movie: "", link: "https://www.youtube.com/watch?v=gpVA5mx73UE" },
+{ name: "Kadhal Kanave", movie: "", link: "https://www.youtube.com/watch?v=yipFMcNU2yY" },
+{ name: "Kadhale Kadhale ", movie: "", link: "https://www.youtube.com/watch?v=L8V3ylj4NUA" },
+{ name: "Kalaivaniye nee kalangathadi", movie: "", link: "https://www.youtube.com/watch?v=-9ipZSzGZf0" },
+{ name: "Kalla Nikkiriye", movie: "", link: "https://www.youtube.com/watch?v=b-IJaMCIhm8" },
+{ name: "Kalloorum", movie: "", link: "https://www.youtube.com/watch?v=p7Gf3oZP6gs" },
+{ name: "Kalyani", movie: "", link: "https://youtu.be/z5y8Clp_TdE?si=26h5xd_RMh_cx6lM" },
+{ name: "Kan Irandil", movie: "", link: "https://www.youtube.com/watch?v=vKWv_DuhOXg" },
+{ name: "Kangal Edho ", movie: "", link: "https://www.youtube.com/watch?v=sVabzzHzZVQ" },
+{ name: "Kanmoodi Thirakumbothu", movie: "", link: "https://www.youtube.com/watch?v=nPrhOHl0IMk" },
+{ name: "Kannadi Poove", movie: "", link: "https://youtu.be/QNdtanXFNFw?si=jwaR3wuurRyIbRU8" },
+{ name: "Kannae Kanmaniye", movie: "", link: "https://www.youtube.com/watch?v=uA2d7HZkqO4" },
+{ name: "Kannamma", movie: "", link: "https://www.youtube.com/watch?v=_fTN72GPgIU" },
+{ name: "Kanne kanmaniye", movie: "", link: "https://www.youtube.com/watch?v=c3ax45qboXI" },
+{ name: "Kannukkul Pothivaippen", movie: "", link: "https://www.youtube.com/watch?v=A-EURnZ57MA" },
+{ name: "Kannukulla", movie: "", link: "https://www.youtube.com/watch?v=sdajTOjARNg" },
+{ name: "Kannumuzhi", movie: "", link: "https://www.youtube.com/watch?v=rE7nrxZPaN4" },
+{ name: "Katchi Sera ", movie: "", link: "https://www.youtube.com/watch?v=VU23OPQ1Pmc" },
+{ name: "Kathula Kathula poomazha", movie: "", link: "https://www.youtube.com/watch?v=BEAJzcgPfKk" },
+{ name: "Kattazhagi", movie: "", link: "https://www.youtube.com/watch?v=L6aovNAS4Uk" },
+{ name: "Kattu Mooliyo", movie: "", link: "https://www.youtube.com/watch?v=Qs2ta9_CaKM" },
+{ name: "Kedaiya kedakkuren", movie: "", link: "https://www.youtube.com/watch?v=9d3mpQ0Vkq0" },
+{ name: "Kiliy", movie: "", link: "https://www.youtube.com/watch?v=B2UBMTA57JI" },
+{ name: "Maya Nadhi Song ", movie: "", link: "https://youtu.be/9cHXA6l4e4Q?si=VWq10vhD5PsnWALm" },
+{ name: "Megathoodham", movie: "", link: "https://www.youtube.com/watch?v=S7hNNqGeHfs" },
+{ name: "Naan paakua paakura", movie: "", link: "https://youtu.be/E7IqglHfpQg?si=q4sDcGqAWA0h5-4w" },
+{ name: "Narai vandha pirage", movie: "", link: "https://www.youtube.com/watch?v=psi5C9WM3i0" },
+{ name: "onnaala kaaki satta", movie: "", link: "https://www.youtube.com/watch?v=igFjBPgjyVo" },
+{ name: "Pavazha Malli", movie: "", link: "https://www.youtube.com/watch?v=b68HETiNO98" },
+{ name: "Pudichiruka illa Pudikalaya", movie: "", link: "https://www.youtube.com/watch?v=-MQLFlSA4Nw" },
+{ name: "Radhimaa", movie: "", link: "https://www.youtube.com/watch?v=jR3rWCBeO6M" },
+{ name: "Sellakutti Rasathi", movie: "", link: "https://www.youtube.com/watch?v=r3bngwZsfMI" },
+{ name: "Seramal Ponal ", movie: "", link: "https://www.youtube.com/watch?v=URgqLY3Z7PQ" },
+{ name: "Sirukki Vaasam", movie: "", link: "https://www.youtube.com/watch?v=O4OqlkXC4PQ" },
+{ name: "Thaabangale ", movie: "", link: "https://www.youtube.com/watch?v=I6KBcn3gvw0" },
+{ name: "Thattaan Thattaan", movie: "", link: "https://www.youtube.com/watch?v=StOWKYCrFEA" },
+{ name: "Uyir Uruvaatha ", movie: "", link: "https://youtu.be/7B_1oIBvWqI?si=c_Don4Kkvj7Q_dcc" },
+{ name: "Vaanam Paarthen", movie: "", link: "https://www.youtube.com/watch?v=QoCUEvewVYs" },
+{ name: "Vilambara Idaiveli", movie: "", link: "https://www.youtube.com/watch?v=dsrku40uZMc" },
+{ name: "Vizhi Veekura", movie: "", link: "https://www.youtube.com/watch?v=oUOZ3OZac1I" },
+{ name: "ஒளியிலே தெரிவது தேவதையா", movie: "", link: "https://www.youtube.com/watch?v=cpaGnw_lGPQ" },
+{ name: "வாராயோ வாராயோ", movie: "", link: "https://www.youtube.com/watch?v=B5z8LoSNgLw" },
+
+
+
+
 ];
 /* ============== end of editable part ============== */
 
+/* ---- Tabs: array positions (0-based). Song numbers shown = position + 1 ---- */
+var TABS = { old:{lo:0, hi:148}, nw:{lo:149, hi:249} };
+var tab = "nw";
+
 var cur = 0, playing = false;
 var $ = function(id){ return document.getElementById(id); };
-
 var AKEY = "autoplay:" + location.pathname;
 var autoplay = true;
 try{ var sv = localStorage.getItem(AKEY); if(sv !== null) autoplay = (sv === "1"); }catch(e){}
+
+function rng(){
+  var r = TABS[tab];
+  return { lo: r.lo, hi: Math.min(r.hi, SONGS.length - 1) };
+}
+
 function paintAuto(){
   var b = $("bAuto");
   b.textContent = "Auto Play: " + (autoplay ? "ON" : "OFF");
@@ -263,13 +380,14 @@ function parse(link){
   if(t) s = (+t[1]||0)*3600 + (+t[2]||0)*60 + (+t[3]||0);
   return {id:m[1], start:s};
 }
+
 var counts = {};
 SONGS.forEach(function(s){ var v=parse(s.link); if(v) counts[v.id]=(counts[v.id]||0)+1; });
 
 function buildList(){
-  var box = $("items"); box.innerHTML = "";
-  SONGS.forEach(function(s,i){
-    var v = parse(s.link), b = document.createElement("button");
+  var box = $("items"), r = rng(); box.innerHTML = "";
+  for(var i = r.lo; i <= r.hi; i++){ (function(i){
+    var s = SONGS[i], v = parse(s.link), b = document.createElement("button");
     b.className = "item";
     b.innerHTML = '<span class="n">'+(i+1)+'</span><span class="t"><b></b><small></small></span>';
     b.querySelector("b").textContent = s.name;
@@ -279,9 +397,22 @@ function buildList(){
     }
     b.onclick = function(){ play(i); };
     box.appendChild(b);
-  });
+  })(i); }
+  $("tOld").className = tab === "old" ? "on" : "";
+  $("tNew").className = tab === "nw" ? "on" : "";
+  $("listView").scrollTop = 0;
 }
-function showList(){ $("playView").style.display="none"; $("listView").style.display="block"; playing=false; }
+
+function setTab(t){ tab = t; buildList(); }
+$("tOld").onclick = function(){ setTab("old"); };
+$("tNew").onclick = function(){ setTab("nw"); };
+
+function showList(){
+  $("playView").style.display = "none";
+  $("tabs").style.display = "flex";
+  $("listView").style.display = "block";
+  playing = false;
+}
 
 var ytReady = false, ytPlayer = null, pendingPlay = null;
 function onYouTubeIframeAPIReady(){
@@ -300,10 +431,13 @@ function onYouTubeIframeAPIReady(){
 
 function play(i){
   if(!SONGS.length) return;
-  cur = (i + SONGS.length) % SONGS.length; playing = true;
+  var r = rng();
+  if(i > r.hi) i = r.lo; else if(i < r.lo) i = r.hi;   /* loop inside the active tab */
+  cur = i; playing = true;
   var s = SONGS[cur], v = parse(s.link);
-  $("listView").style.display="none"; $("playView").style.display="flex";
-  $("cap").textContent = (cur+1)+" / "+SONGS.length+"  "+s.name;
+  $("tabs").style.display = "none";
+  $("listView").style.display = "none"; $("playView").style.display = "flex";
+  $("cap").textContent = (cur+1)+" / "+(r.hi+1)+" "+s.name;
   $("yt").href = s.link; $("num").value = "";
   if(!v){
     $("msg").textContent = "Song "+(cur+1)+" does not have a valid YouTube video link.";
@@ -314,15 +448,17 @@ function play(i){
   if(!ytReady){ pendingPlay = cur; $("msg").textContent = "Loading player..."; $("msg").style.display="flex"; return; }
   ytPlayer.loadVideoById({ videoId: v.id, startSeconds: v.start });
 }
-$("bFirst").onclick = function(){ play(0); };
-$("bLast").onclick  = function(){ play(SONGS.length-1); };
-$("bPrev").onclick  = function(){ play(cur-1); };
-$("bNext").onclick  = function(){ play(cur+1); };
+
+$("bFirst").onclick = function(){ play(rng().lo); };
+$("bLast").onclick = function(){ play(rng().hi); };
+$("bPrev").onclick = function(){ play(cur-1); };
+$("bNext").onclick = function(){ play(cur+1); };
 $("num").oninput = function(){ this.value = this.value.replace(/[^0-9]/g,"").slice(0,3); };
+
 function go(){
-  var n = parseInt($("num").value, 10);
-  if(n>=1 && n<=SONGS.length) play(n-1);
-  else { $("num").value=""; $("num").placeholder = "1-"+SONGS.length; }
+  var r = rng(), n = parseInt($("num").value, 10);
+  if(n >= r.lo+1 && n <= r.hi+1) play(n-1);
+  else { $("num").value = ""; $("num").placeholder = (r.lo+1)+"-"+(r.hi+1); }
 }
 $("bGo").onclick = go;
 $("num").onkeydown = function(e){ if(e.key==="Enter") go(); };
@@ -333,9 +469,9 @@ $("bBack").onclick = function(){
   if(fs){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} }
   else if(playing){ showList(); }
 };
+
 buildList();
 </script>
-
 <script src="disable_rightclick.js"></script>
 </body>
 </html>
