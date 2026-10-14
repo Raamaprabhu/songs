@@ -14,6 +14,9 @@ button.on{background:#1c7a3d}
 #top .sp{flex:1;font-weight:700;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
 #listView{flex:1;overflow-y:auto;padding:6px 10px 20px}
 #listView p{color:#aaa;font-size:14px;margin:8px 2px}
+#tabs{display:none;gap:6px;overflow-x:auto;padding:6px 0 8px;position:sticky;top:0;background:#0f1218;z-index:2;scrollbar-width:thin}
+#tabs button{flex:0 0 auto;padding:10px 16px;white-space:nowrap}
+#tabs button.on{background:#ffb703;color:#111;font-weight:700}
 .item{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#1b212c;margin:0 0 6px;padding:12px}
 .item .n{min-width:34px;height:34px;border-radius:50%;background:#ffb703;color:#111;font-weight:700;display:flex;align-items:center;justify-content:center}
 .item .t{flex:1;min-width:0}
@@ -39,7 +42,6 @@ button.on{background:#1c7a3d}
 </style>
 </head>
 <body>
-<!-- rest of your page -->
 <div id="top">
   <a class="btn" href="index.html">Home</a>
   <span class="sp">Hindi Songs</span>
@@ -48,7 +50,8 @@ button.on{background:#1c7a3d}
 </div>
 
 <div id="listView">
-  <p>Hindi Songs &mdash; tap a song number to play.</p>
+  <div id="tabs"></div>
+  <p id="hint">Hindi Songs &mdash; tap a song number to play.</p>
   <div id="items"></div>
 </div>
 
@@ -72,138 +75,31 @@ button.on{background:#1c7a3d}
     </div>
   </div>
 </div>
- 
+
 <script src="https://www.youtube.com/iframe_api"></script>
-
-
-  
 <script>
-
 /* ==========================================================
-   EDIT HERE: one line per song.
-   name  = song name       movie = movie / year (optional, can be "")
-   link  = YouTube link (watch?v=..., youtu.be/...)
-   Start a jukebox video at a time by adding &t=90s (or ?t=90s).
-   Keep the quotes and the comma at the end of each line.
+   Songs are now kept in  hin.txt  (same folder as this file).
+
+   hin.txt format, one song per line:
+       Song name | Movie | YouTube link     (leave Movie empty if unknown)
+       Song name | YouTube link             (also works)
+       YouTube link                         (name fetched from YouTube)
+
+   Tabs:  a line starting with #  starts a new tab, e.g.
+       #list1
+       ...songs...
+       #list2
+       ...songs...
+   No # lines at all (or only "#list")  ->  NO tabs, one serial list.
+
+   Start a jukebox video at a time by adding &t=90s to the link.
+   NOTE: hin.txt is loaded with fetch(), so open the page through
+   http(s) (e.g. GitHub Pages), not by double-clicking the file.
    ========================================================== */
-var SONGS = [
+var TXT_FILE = "https://raw.githubusercontent.com/Raamaprabhu/Songs_test/main/hin.txt";
 
-{ name: "Mere sapno ki rani", movie: "", link: "https://youtu.be/IHR4xZ-AEk8?si=qSLaOA6jJriimQym" },
-{ name: "Main Shayar To Nahin", movie: "", link: "https://youtu.be/eVbjdFOkuW0?si=9AeB9p-S1SX8BPcW" },
-{ name: "Yaadon Ki Baaraat", movie: "", link: "https://youtu.be/VOmreGQTc04?si=Y-OumtCVMSZ2f9MB" },
-{ name: "Jeena Yahan Marna Yahan", movie: "", link: "https://youtu.be/sI7WLg21i80?si=CxUk8ZYnd0WESIFV" },
-{ name: "So Gaya Yeh Jahan", movie: "", link: "https://youtu.be/up40nlh6mek?si=J8Y2vWmqE2R6Oe-v" },
-{ name: "Pyar Hua Ikrar Hua", movie: "", link: "https://youtu.be/xkl1QwNEuYs?si=YYeQi0qSrIoaqVAj" },
-{ name: "Zindagi Ek Safar Hai Suhana", movie: "", link: "https://youtu.be/GjPGVVebVUc?si=dssKoVkMD1VcaClG" },
-{ name: "Chura Liya Hai Tumne", movie: "", link: "https://youtu.be/3c3XiJZw-84?si=BEofXTeK9-ZxzU_S" },
-{ name: "Kya Hua Tera Wada", movie: "", link: "https://youtu.be/fyZ-sOHj-Vg?si=OYQEtSA_ZuMmfZT8" },
-{ name: "Chhu Kar Mere Manko", movie: "", link: "https://youtu.be/BOLYNw3x1lE?si=nKPwxuvCmWKDMIwP" },
-{ name: "Pal Pal Dil Ke Paas", movie: "", link: "https://youtu.be/cvQWzlNIjt8?si=-PgRvml70jHHuhfu" },
-{ name: "Rimjhim Gire Sawan", movie: "", link: "https://youtu.be/6C7R_CUJgHQ?si=JQA36uzQTH3ThhIK" },
-{ name: "Chalte chalte yad rakhna", movie: "", link: "https://youtu.be/rEOoXykGnkg?si=nz3Vx2TpZFUkCqqT" },
-{ name: "Neele Neele Ambar Par", movie: "", link: "https://youtu.be/eVnG_Rqfgg4?si=-ubtlUrVSycbwERZ" },
-{ name: "Yeh Ratein Yeh Mausam", movie: "", link: "https://youtu.be/zMGYCKr5trw?si=PW8eALBg5Kga8N_U" },
-{ name: "Pyar Deewana Hota Hai", movie: "", link: "https://youtu.be/yiHfWoN33c8?si=73-pDu1ZBliB8yGE" },
-{ name: "Lag Ja Gale ", movie: "", link: "https://youtu.be/fj4MnkljFXc?si=_TmTfcwln0yL3LxT" },
-{ name: "Khilte Hain Gul Yahan", movie: "", link: "https://youtu.be/TXxkuWYsfgA?si=HBP96J2saIgAiSIl" },
-{ name: "Wada Karle", movie: "", link: "https://youtu.be/9nkADFXXL0s?si=Wakbdvk1KnZTXWhH" },
-{ name: "Tere Mere Beech Mein", movie: "", link: "https://youtu.be/oGKDBhdxn6c?si=MhZHIeD135NbNycT" },
-{ name: "Madhuban Khushboo Deta Hai", movie: "", link: "https://youtu.be/3DRVa58kAks?si=lMwc0xSDKsMUMFFY" },
-{ name: "Roja Jaaneman Tu Hi Mera Dil", movie: "", link: "https://youtu.be/iDQ1qjCevZE?si=mTw72v7-JwdMN8WZ" },
-{ name: "Tu Hi Re", movie: "", link: "https://youtu.be/V9mN0qBgEzQ?si=LuYu0oWYulSjajWY" },
-{ name: "Yeh Haseen Vadiyan", movie: "", link: "https://youtu.be/5kZ5o-oM0RI?si=43n7CSJCRl-Wvl1e" },
-{ name: "Zara Zara", movie: "", link: "https://youtu.be/sjij_VKa2QQ?si=utUEgeY7Z4dStOFC" },
-{ name: "Kabhi Kabhie Mere Dil Mein", movie: "", link: "https://youtu.be/BVnz6oSupUM?si=TztN_L-Ps-Yckb2G" },
-{ name: "Bahut Pyar Karte Hai", movie: "", link: "https://youtu.be/PO0OrfCa8LI?si=5c1UeaUOLGIBIhzT" },
-{ name: "huki Jhuki Si Nazar", movie: "", link: "https://youtu.be/xY2P6IAd0MI?si=DpYS1ltiU18LGciR" },
-{ name: "Baazigar O Baazigar", movie: "", link: "https://youtu.be/PUO7_Gi6ipg?si=9D7jd8eFikl8SSgE" },
-{ name: "Jab Deep Jale", movie: "", link: "https://youtu.be/GefpYy4knUo?si=KCqR_uZh9tlglDwL" },
-{ name: "Gori Tera Gaon", movie: "", link: "https://youtu.be/JbKrK8OVFz4?si=-8OxgtQAtvbcW8bO" },
-{ name: "Zihaal e Miskin", movie: "", link: "https://www.youtube.com/watch?v=11OWuPcElJw" },
-{ name: "Bahon Mein Chale Aao", movie: "", link: "https://www.youtube.com/watch?v=1M4W0Com_Pk" },
-{ name: "Ek Din Aap Yun", movie: "", link: "https://www.youtube.com/watch?v=1sRaLqtHXQU" },
-{ name: "Albela Sajan", movie: "", link: "https://www.youtube.com/watch?v=1tFS3VRuhUw" },
-{ name: "Suroor", movie: "", link: "https://www.youtube.com/watch?v=2-m7zfgKoRE" },
-{ name: " Zara Kareeb Se", movie: "", link: "https://www.youtube.com/watch?v=39JcLiUzSrQ" },
-{ name: "Sogase", movie: "", link: "https://www.youtube.com/watch?v=5RmtnmMou_A" },
-{ name: "Dekha Ek Khwab", movie: "", link: "https://www.youtube.com/watch?v=7dO_MS9tZ5E" },
-{ name: "Dil Leke", movie: "", link: "https://www.youtube.com/watch?v=9C008fKT5VM" },
-{ name: "Gerua", movie: "", link: "https://www.youtube.com/watch?v=AEIVhBS6baE" },
-{ name: "Tum Chhupa Na Sakogi", movie: "", link: "https://www.youtube.com/watch?v=aEy65CdN8y8" },
-{ name: "Dil Ne Yeh Kaha Hain Dil Se", movie: "", link: "https://www.youtube.com/watch?v=bkWpCme6JCo" },
-{ name: "Kabhi Sham Dhale Toh Mere Paas Aa Jana", movie: "", link: "https://www.youtube.com/watch?v=BOTZGXo-jh8" },
-{ name: "PREM RATAN DHAN PAYO", movie: "", link: "https://www.youtube.com/watch?v=bPk9bSvQQoc" },
-{ name: "Teri Yaadon Ki Chadar Odhe", movie: "", link: "https://www.youtube.com/watch?v=BvHGWv5yaxk" },
-{ name: "Aaye Ho Meri Zindagi Mein", movie: "", link: "https://www.youtube.com/watch?v=CbFjVMEZA5k" },
-{ name: "Tujhe Dekha Toh ", movie: "", link: "https://www.youtube.com/watch?v=cNV5hLSa9H8" },
-{ name: "Ankhiyon Ke Jharokhon", movie: "", link: "https://www.youtube.com/watch?v=d83AX2U6rxo" },
-{ name: "Tere Naam", movie: "", link: "https://www.youtube.com/watch?v=ErB7Iw7TBDQ" },
-{ name: "Apsraa", movie: "", link: "https://www.youtube.com/watch?v=fO9xunnaEVc" },
-{ name: "Kitna Akela Tha Dil", movie: "", link: "https://www.youtube.com/watch?v=FyHvdwC_ivA" },
-{ name: "Mere Yaar Ki Shaadi Hai", movie: "", link: "https://www.youtube.com/watch?v=guHHhEUYAQ4" },
-{ name: "Gehra Hua", movie: "", link: "https://www.youtube.com/watch?v=GVizJ_jpUnw" },
-{ name: "Janiye", movie: "", link: "https://www.youtube.com/watch?v=H1YR5rsScC8" },
-{ name: "Ho Gaya Hai Tujhko Toh Pyar Sajna", movie: "", link: "https://www.youtube.com/watch?v=hw_HpTI_Wkw" },
-{ name: "Tera Na Raha", movie: "", link: "https://www.youtube.com/watch?v=i5Xf0qub3Rk" },
-{ name: "Tu Shayar Hai Main Teri Shayari", movie: "", link: "https://www.youtube.com/watch?v=IPalO02GHOk" },
-{ name: "O Re Piya", movie: "", link: "https://www.youtube.com/watch?v=iv7lcUkFVSc" },
-{ name: "Enna Sona", movie: "", link: "https://www.youtube.com/watch?v=IZF-rOe9u-g" },
-{ name: "KABIRA", movie: "", link: "https://www.youtube.com/watch?v=jHNNMj5bNQw" },
-{ name: "Bapu Zimidar", movie: "", link: "https://www.youtube.com/watch?v=jOYR3k1VhUQ" },
-{ name: "Taal Se Taal Mila", movie: "", link: "https://www.youtube.com/watch?v=kxexoHQUvBQ" },
-{ name: "Tere Sang Ye Dil", movie: "", link: "https://www.youtube.com/watch?v=lTeH_tKjEB8" },
-{ name: "Shayad", movie: "", link: "https://www.youtube.com/watch?v=MJyKN-8UncM" },
-{ name: "Soch Na Sake", movie: "", link: "https://www.youtube.com/watch?v=MRtRcTfszjY" },
-{ name: "Tum Se Hi", movie: "", link: "https://www.youtube.com/watch?v=mt9xg0mmt28" },
-{ name: "Pyar Ki Ek Kahani", movie: "", link: "https://www.youtube.com/watch?v=mTdJf1EX5tA" },
-{ name: "Tere Ishq Ki Khushboo Se", movie: "", link: "https://www.youtube.com/watch?v=NnLob3q5_Uw" },
-{ name: "Halka Halka", movie: "", link: "https://www.youtube.com/watch?v=nZhLM-FeV9A" },
-{ name: "𝗦𝗮𝘂 𝗦𝗮𝗮𝗹 𝗣𝗲𝗵𝗹𝗲 ", movie: "", link: "https://www.youtube.com/watch?v=O3lE02c-hj8" },
-{ name: "Aao Na", movie: "", link: "https://www.youtube.com/watch?v=OBT2ggq_Ph4" },
-{ name: "Kiska Hai Ye Tumko Intezar", movie: "", link: "https://www.youtube.com/watch?v=Op_UWVBWj3c" },
-{ name: "Raataan Lambiyan", movie: "", link: "https://www.youtube.com/watch?v=orYf6VDtj_k" },
-{ name: "O Saathi", movie: "", link: "https://www.youtube.com/watch?v=OX-h7MtkeOI" },
-{ name: "Teri Koyal Jaisi Boli", movie: "", link: "https://www.youtube.com/watch?v=Pbd5AXVhjGc" },
-{ name: "Teri Chahat Mein Dil Deewana", movie: "", link: "https://www.youtube.com/watch?v=PGxoQbdaEmU" },
-{ name: "Tu Itni Khoobsurat Hai", movie: "", link: "https://www.youtube.com/watch?v=PKIlSv9yMTY" },
-{ name: "Dil Kehta Hai", movie: "", link: "https://www.youtube.com/watch?v=PqiddY3o3aY" },
-{ name: "Tu Mile Dil Khile", movie: "", link: "https://www.youtube.com/watch?v=pZbsVynV2so" },
-{ name: "aasuom ki jaam pila", movie: "", link: "https://www.youtube.com/watch?v=qJXFYwb_0VM" },
-{ name: "Jeene Laga Hoon ", movie: "", link: "https://www.youtube.com/watch?v=qpIdoaaPa6U" },
-{ name: "Subhanallah", movie: "", link: "https://www.youtube.com/watch?v=QYO6AlxiRE4" },
-{ name: "Bahut Der Se Dar Pe Aankh Lagi Thi", movie: "", link: "https://www.youtube.com/watch?v=r8N0V77Qr18" },
-{ name: "Kehna Hi Kya", movie: "", link: "https://www.youtube.com/watch?v=RfK54g1wo9k" },
-{ name: "Heeriye", movie: "", link: "https://www.youtube.com/watch?v=RLzC55ai0eo" },
-{ name: "Kya Tumhe Pata Hai Ae Gulshan", movie: "", link: "https://www.youtube.com/watch?v=rrhDWKFjfZs" },
-{ name: "Raaton Mein Chupke Se", movie: "", link: "https://www.youtube.com/watch?v=rTF_2inQKsI" },
-{ name: "Aanke kehthi hai pyaar", movie: "", link: "https://www.youtube.com/watch?v=S9XHRHSk30M" },
-{ name: "Pehla Nasha Pehla khumar", movie: "", link: "https://www.youtube.com/watch?v=SBfPs-PMGTA" },
-{ name: "Yaara Seeli Seeli", movie: "", link: "https://www.youtube.com/watch?v=SnqzIMeYBbk" },
-{ name: "Ghunghat Mein Chand Hoga", movie: "", link: "https://www.youtube.com/watch?v=SrZiUu2Al_A" },
-{ name: "Masakali ", movie: "", link: "https://www.youtube.com/watch?v=SS3lIQdKP-A" },
-{ name: "Jag Ghoomeya", movie: "", link: "https://www.youtube.com/watch?v=t10sQb0Zmjs" },
-{ name: "Humnava Mere", movie: "", link: "https://www.youtube.com/watch?v=TmRgK-pXH9c" },
-{ name: "Puraani yaadein taza", movie: "", link: "https://www.youtube.com/watch?v=U9EoMqq3UlE" },
-{ name: "Kaho Na Kaho", movie: "", link: "https://www.youtube.com/watch?v=ujtwJ2z7QrY" },
-{ name: "Chahun Main Ya Naa", movie: "", link: "https://www.youtube.com/watch?v=VdyBtGaspss" },
-{ name: "Chahunga main thuje", movie: "", link: "https://www.youtube.com/watch?v=vq9g1Nf0Q8M" },
-{ name: "Kaise Hua", movie: "", link: "https://www.youtube.com/watch?v=WWXm39leYew" },
-{ name: "Lag Ja Gale", movie: "", link: "https://www.youtube.com/watch?v=xcJjB75VC-k" },
-{ name: "Mast Magan", movie: "", link: "https://www.youtube.com/watch?v=xitd9mEZIHk" },
-{ name: "Teri Meri Prem Kahani", movie: "", link: "https://www.youtube.com/watch?v=xkT5KySmGHw" },
-{ name: "Pehla Pyar", movie: "", link: "https://www.youtube.com/watch?v=XPI_Ix0Oxcc" },
-{ name: "Saathiya Tune Kya Kiya", movie: "", link: "https://www.youtube.com/watch?v=xptbe8gJFI4" },
-{ name: "Naino Ne Baandhi", movie: "", link: "https://www.youtube.com/watch?v=Y9ozt29tzgs" },
-{ name: "Main Yahaan Hoon", movie: "", link: "https://www.youtube.com/watch?v=yqtGt2IjyKg" },
-{ name: "Chupana Nahi Aata", movie: "", link: "https://www.youtube.com/watch?v=yRyCIyJJ4t4" },
-{ name: "Tanhayee", movie: "", link: "https://www.youtube.com/watch?v=ZkwaiIGoyT4" },
-{ name: "Tu Mera Ho Nhi Sakta", movie: "", link: "https://www.youtube.com/watch?v=zN-pbTHsDhs" },
-{ name: "Chura Liya Hai Tumne Jo Dil Ko", movie: "", link: "https://youtu.be/seFeZOgyFsc?si=c7P0JLPaF9rjfRzZ" },
-
-
-];
-/* ============== end of editable part ============== */
-
+var GROUPS = [], SONGS = [], tabbed = false, curTab = 0, counts = {};
 var cur = 0, playing = false;
 var $ = function(id){ return document.getElementById(id); };
 
@@ -229,12 +125,87 @@ function parse(link){
   if(t) s = (+t[1]||0)*3600 + (+t[2]||0)*60 + (+t[3]||0);
   return {id:m[1], start:s};
 }
-var counts = {};
-SONGS.forEach(function(s){ var v=parse(s.link); if(v) counts[v.id]=(counts[v.id]||0)+1; });
 
+/* ---------- read hin.txt ---------- */
+function parseTxt(txt){
+  var groups = [], g = null;
+  txt.replace(/^\uFEFF/, "").split(/\r?\n/).forEach(function(raw){
+    var line = raw.trim();
+    if(!line) return;
+    var h = line.match(/^#\s*(.*)$/);
+    if(h){ g = {label: h[1].trim(), songs: []}; groups.push(g); return; }
+    var u = line.match(/https?:\/\/\S+/);
+    if(!u) return;
+    var parts = line.slice(0, u.index).replace(/[\s|\-\u2013:,]+$/, "").split("|");
+    var name = (parts[0] || "").trim(), movie = (parts[1] || "").trim();
+    if(!g){ g = {label: "", songs: []}; groups.push(g); }
+    g.songs.push({name: name, movie: movie, link: u[0]});
+  });
+  return groups.filter(function(x){ return x.songs.length; });
+}
+
+function setup(txt){
+  var groups = parseTxt(txt);
+  var named = groups.filter(function(x){ return x.label && x.label.toLowerCase() !== "list"; });
+  if(!named.length){
+    /* no tabs: merge everything into one serial list */
+    var all = [];
+    groups.forEach(function(x){ all = all.concat(x.songs); });
+    GROUPS = [{label: "", songs: all}];
+    tabbed = false;
+  }else{
+    groups.forEach(function(x){ if(!x.label) x.label = "List"; });
+    GROUPS = groups;
+    tabbed = true;
+  }
+  GROUPS.forEach(function(x){
+    x.songs.forEach(function(s, i){
+      if(!s.name){ s.name = "Song " + (i + 1); s.auto = true; }
+      var v = parse(s.link); if(v) counts[v.id] = (counts[v.id] || 0) + 1;
+    });
+  });
+  buildTabs();
+  selectTab(0);
+}
+
+/* ---------- tabs ---------- */
+function buildTabs(){
+  var box = $("tabs"); box.innerHTML = "";
+  box.style.display = tabbed ? "flex" : "none";
+  if(!tabbed) return;
+  GROUPS.forEach(function(x, i){
+    var b = document.createElement("button");
+    b.textContent = x.label + " (" + x.songs.length + ")";
+    b.onclick = function(){ selectTab(i); };
+    box.appendChild(b);
+  });
+}
+function selectTab(i){
+  curTab = i; SONGS = GROUPS[i].songs; cur = 0;
+  var bs = $("tabs").children;
+  for(var k = 0; k < bs.length; k++) bs[k].className = (k === i ? "on" : "");
+  buildList();
+  $("listView").scrollTop = 0;
+}
+
+/* ---------- list ---------- */
+function titleFor(s, v, btn){
+  /* only for songs listed without a name in hin.txt */
+  if(!s.auto || s.tried || !v) return;
+  s.tried = true;
+  fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + v.id))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.title){
+        s.name = d.title;
+        if(btn) btn.querySelector("b").textContent = s.name;
+        if(playing && SONGS[cur] === s) paintCap();
+      }
+    }).catch(function(){});
+}
 function buildList(){
   var box = $("items"); box.innerHTML = "";
-  SONGS.forEach(function(s,i){
+  SONGS.forEach(function(s, i){
     var v = parse(s.link), b = document.createElement("button");
     b.className = "item";
     b.innerHTML = '<span class="n">'+(i+1)+'</span><span class="t"><b></b><small></small></span>';
@@ -245,10 +216,12 @@ function buildList(){
     }
     b.onclick = function(){ play(i); };
     box.appendChild(b);
+    titleFor(s, v, b);
   });
 }
 function showList(){ $("playView").style.display="none"; $("listView").style.display="block"; playing=false; }
 
+/* ---------- player ---------- */
 var ytReady = false, ytPlayer = null, pendingPlay = null;
 function onYouTubeIframeAPIReady(){
   ytReady = true;
@@ -263,13 +236,16 @@ function onYouTubeIframeAPIReady(){
   });
   if(pendingPlay !== null){ var i = pendingPlay; pendingPlay = null; play(i); }
 }
-
+function paintCap(){
+  var s = SONGS[cur];
+  $("cap").textContent = (tabbed ? GROUPS[curTab].label + " \u00b7 " : "") + (cur+1) + " / " + SONGS.length + " " + s.name;
+}
 function play(i){
   if(!SONGS.length) return;
   cur = (i + SONGS.length) % SONGS.length; playing = true;
   var s = SONGS[cur], v = parse(s.link);
   $("listView").style.display="none"; $("playView").style.display="flex";
-  $("cap").textContent = (cur+1)+" / "+SONGS.length+"  "+s.name;
+  paintCap();
   $("yt").href = s.link; $("num").value = "";
   if(!v){
     $("msg").textContent = "Song "+(cur+1)+" does not have a valid YouTube video link.";
@@ -281,9 +257,9 @@ function play(i){
   ytPlayer.loadVideoById({ videoId: v.id, startSeconds: v.start });
 }
 $("bFirst").onclick = function(){ play(0); };
-$("bLast").onclick  = function(){ play(SONGS.length-1); };
-$("bPrev").onclick  = function(){ play(cur-1); };
-$("bNext").onclick  = function(){ play(cur+1); };
+$("bLast").onclick = function(){ play(SONGS.length-1); };
+$("bPrev").onclick = function(){ play(cur-1); };
+$("bNext").onclick = function(){ play(cur+1); };
 $("num").oninput = function(){ this.value = this.value.replace(/[^0-9]/g,"").slice(0,3); };
 function go(){
   var n = parseInt($("num").value, 10);
@@ -299,7 +275,17 @@ $("bBack").onclick = function(){
   if(fs){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} }
   else if(playing){ showList(); }
 };
-buildList();
+
+/* ---------- start ---------- */
+fetch(TXT_FILE + "?v=" + Date.now(), {cache: "no-store"})
+  .then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); })
+  .then(function(t){
+    setup(t);
+    if(!GROUPS.length || !SONGS.length) $("hint").textContent = TXT_FILE + " has no song links.";
+  })
+  .catch(function(){
+    $("hint").textContent = "Could not load " + TXT_FILE + ". Keep it in the same folder as this page and open the page through http(s).";
+  });
 </script>
 <script src="disable_rightclick.js"></script>
 </body>
