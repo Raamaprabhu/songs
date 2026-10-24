@@ -79,7 +79,7 @@ button.on{background:#1c7a3d}
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /* ==========================================================
-   Songs are loaded from tam.txt in this same folder.
+   Songs are loaded from tam_test.txt in this same folder.
    Format, one song per line:   name | movie | YouTube link
    Section markers:             #OLD   and   #NEW
    (the sections may appear in either order)
@@ -89,7 +89,7 @@ button.on{background:#1c7a3d}
    ========================================================== */
 var SONGS = [];
 
-/* lo/hi = index range inside SONGS for each tab (filled after tam.txt loads) */
+/* lo/hi = index range inside SONGS for each tab (filled after tam_test.txt loads) */
 var TABS = { old:{lo:0, hi:-1}, nw:{lo:0, hi:-1} };
 var tab = "nw";                       /* New Songs is the default tab */
 var cur = 0, playing = false;
@@ -216,9 +216,9 @@ $("bBack").onclick = function(){
   else if(playing){ showList(); }
 };
 
-fetch("https://raw.githubusercontent.com/Raamaprabhu/Songs_test/main/tam.txt")
+fetch("https://raw.githubusercontent.com/Raamaprabhu/Songs_test/main/tam_test.txt")
   .then(function(response) {
-    if (!response.ok) throw new Error("Unable to load tam.txt (HTTP " + response.status + ")");
+    if (!response.ok) throw new Error("Unable to load tam_test.txt (HTTP " + response.status + ")");
     return response.text();
   })
   .then(function(data) {
@@ -257,7 +257,7 @@ fetch("https://raw.githubusercontent.com/Raamaprabhu/Songs_test/main/tam.txt")
   })
   .catch(function(error) {
     $("items").textContent = "Error loading songs: " + error.message +
-      ". Make sure tam.txt is in the same folder and served from a web server.";
+      ". Make sure tam_test.txt is in the same folder and served from a web server.";
   });
 </script>
 <script src="https://raamaprabhu.github.io/songs/disable_rightclick.js"></script>
