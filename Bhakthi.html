@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bhakti Stotras and Songs</title>
+<title>Bhakti Songs</title>
 <style>
 html,body{height:100%;margin:0}
 body{background:#0f1218;color:#f2efe8;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
@@ -14,6 +14,9 @@ button.on{background:#1c7a3d}
 #top .sp{flex:1;font-weight:700;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
 #listView{flex:1;overflow-y:auto;padding:6px 10px 20px}
 #listView p{color:#aaa;font-size:14px;margin:8px 2px}
+#tabs{display:none;gap:6px;overflow-x:auto;padding:6px 0 8px;position:sticky;top:0;background:#0f1218;z-index:2;scrollbar-width:thin}
+#tabs button{flex:0 0 auto;padding:10px 16px;white-space:nowrap}
+#tabs button.on{background:#ffb703;color:#111;font-weight:700}
 .item{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#1b212c;margin:0 0 6px;padding:12px}
 .item .n{min-width:34px;height:34px;border-radius:50%;background:#ffb703;color:#111;font-weight:700;display:flex;align-items:center;justify-content:center}
 .item .t{flex:1;min-width:0}
@@ -39,16 +42,16 @@ button.on{background:#1c7a3d}
 </style>
 </head>
 <body>
-
 <div id="top">
   <a class="btn" href="index.html">Home</a>
-  <span class="sp">Bhakti Stotras and Songs</span>
+  <span class="sp">Bhakti Songs</span>
   <button id="bList">List</button>
   <button id="bFull">Full</button>
 </div>
 
 <div id="listView">
-  <p>Bhakti Stotras and Songs &mdash; tap a song number to play.</p>
+  <div id="tabs"></div>
+  <p id="hint">Bhakti Songs &mdash; tap a song number to play.</p>
   <div id="items"></div>
 </div>
 
@@ -73,62 +76,30 @@ button.on{background:#1c7a3d}
   </div>
 </div>
 
-<script>
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-</script>
-
-  
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-
 /* ==========================================================
-   EDIT HERE: one line per song.
-   name  = song name       movie = movie / year (optional, can be "")
-   link  = YouTube link (watch?v=..., youtu.be/...)
-   Start a jukebox video at a time by adding &t=90s (or ?t=90s).
-   Keep the quotes and the comma at the end of each line.
+   Songs are now kept in  bak.txt  (same folder as this file).
+
+   bak.txt format, one song per line:
+       Song name | Movie | YouTube link     (leave Movie empty if unknown)
+       Song name | YouTube link             (also works)
+       YouTube link                         (name fetched from YouTube)
+
+   Tabs:  a line starting with #  starts a new tab, e.g.
+       #list1
+       ...songs...
+       #list2
+       ...songs...
+   No # lines at all (or only "#list")  ->  NO tabs, one serial list.
+
+   Start a jukebox video at a time by adding &t=90s to the link.
+   NOTE: bak.txt is loaded with fetch(), so open the page through
+   http(s) (e.g. GitHub Pages), not by double-clicking the file.
    ========================================================== */
-var SONGS = [
+var TXT_FILE = "https://raw.githubusercontent.com/Raamaprabhu/Songs_test/main/bak.txt";
 
-{ name: "Vinayagar Devotional Songs Seergazhi Govindarajan", movie: "", link: "https://youtu.be/qpd5LG4Vfxo?si=PtohnkZMJWziGrVi" },
-{ name: "Ganesha Pancharatnam", movie: "", link: "https://youtu.be/ogcUwadnb1o?si=SfXTaxYYKjSlZn9p" },
-{ name: "Vinayagar Agaval", movie: "", link: "https://youtu.be/udXhFXlM8h8?si=tz2B2hEstKWA5T4e" },
-{ name: "Kanthar Anubhuthi", movie: "", link: "https://youtu.be/z2PzUnlc9ew?si=8cgj8PSHdRebBn88" },
-{ name: "Subramanya Bhujangam", movie: "", link: "https://youtu.be/rvzuKj_Q1mY?si=4dyh8-EI5iWTuRpA" },
-{ name: "Kanda Sashti Kavacham", movie: "", link: "https://youtu.be/F5x1tb3HhaY?si=-pDkuGn9daFuMq4H" },
-{ name: "Nada Vindu Kaladi - Thiruppugazh", movie: "", link: "https://youtu.be/zOnzSZvYIiQ?si=ihWveJa5RF0v4gDQ" },
-{ name: "Aditya Hridyam ", movie: "", link: "https://youtu.be/t9ZoUYELWqk?si=BjgQGIHQmQO5wRzo" },
-{ name: "Surya Namaskaram - Arunam", movie: "", link: "https://youtu.be/NaSjtamHFNk?si=hcjHeu0WOQ722hz1" },
-{ name: "Sri Venkatesa Suprabhatham", movie: "", link: "https://youtu.be/krGYd5tZe0A?si=s2BKf6-j-5G8VbcO" },
-{ name: "Sri Vishnu Sahasranamam MS", movie: "", link: "https://youtu.be/09TRKPisWBY?si=4w_yWQJFfRlw5pbX" },
-{ name: "Shri Vishnu Sahasranamavali 1008 Namams", movie: "", link: "https://youtu.be/C4XFqDe9Kk0?si=4_CCMY7c31WINgsD" },
-{ name: "Sri Mahalakshmi Ashtakam", movie: "", link: "https://youtu.be/lCIHz9Nf68Y?si=HrJtyVI-J9DawS5H" },
-{ name: "Lakshmi Ashtothram -MS", movie: "", link: "https://youtu.be/RExJbSFwrPM?si=XMMFFFvr0IjL-KCR" },
-{ name: "Bhagyada Lakshmi Baaramma", movie: "", link: "https://youtu.be/G2nhZBUj55U?si=xcfpAJNhoDV5kAFn" },
-{ name: "Sri Kanakadhara Stotrm", movie: "", link: "https://youtu.be/0FT_tNAO1gI?si=cE5MvuUeCoh_DjVI" },
-{ name: "Aigiri Nandini (Mahishasura Mardhini)", movie: "", link: "https://youtu.be/8ibj8H4UdlY?si=VHGgf3XLsYZ0iv4r" },
-{ name: "Ya  Devi Sarvabhutheshu", movie: "", link: "https://youtu.be/qsYiWnoiX0M?si=xhApe9PI1zSv-IL7" },
-{ name: "Sri Annapurna Ashtakam", movie: "", link: "https://youtu.be/BIsMI-XnmF0?si=_hljSpM68tlkO2d8" },
-{ name: "Soundarya Lahari ", movie: "", link: "https://youtu.be/J7TGe7LZ6RI?si=U5GkoqIwSHJE4DHI" },
-{ name: "Sri Lalitha Sahasranamam", movie: "", link: "https://youtu.be/61RzMckpflk?si=RtLvZOhH8iJ757Op" },
-{ name: "Ya Kundendu - Saraswati Mantra For Knowledge ", movie: "", link: "https://youtu.be/DySzqHwNCxU?si=plEO8PoVS_sm3wmJ" },
-{ name: "Hanuman Chalisa ", movie: "", link: "https://youtu.be/JHOYi2my9DQ?si=QkUUJBzloleZQxm6" },
-{ name: "Sampradaya Bhajan Thotaka Mangalam", movie: "", link: "https://youtu.be/HBEpW-XxiYU?si=C_yHwsB9N2LCZvwJ" },
-{ name: "Dakshinabharatha Sampradaya Bhajans ", movie: "", link: "https://youtu.be/iiMGzPlZfRg?si=iLYVi9Xts-70QsTa" },
-{ name: "Bhagavan Nama Sankirthan Vol.1", movie: "", link: "https://youtu.be/1yCb44NVzuU?si=xIAULJ3Sd3rMdcdE" },
-{ name: "Bhagavan Nama Sankirthan Vol.2", movie: "", link: "https://youtu.be/1W6S-xn744k?si=XCVHu71ezYtt8RrO" },
-{ name: "Dolotsvam By Haridhos Giri", movie: "", link: "https://youtu.be/JcFcEzO_bwg?si=zO8hbHu0r-pAJYcw" },
-{ name: "Sri Radha Kalyanam Part 1 ", movie: "", link: "https://youtu.be/8Yjn9tIZVAY?si=xauROTILgOLeTKdn" },
-{ name: "Sri Radha Kalyanam Part 2", movie: "", link: "https://youtu.be/BjI6nkmF9HM?si=IyLWMBtgoualmBab" },
-
-
-
-
-];
-/* ============== end of editable part ============== */
-
+var GROUPS = [], SONGS = [], tabbed = false, curTab = 0, counts = {};
 var cur = 0, playing = false;
 var $ = function(id){ return document.getElementById(id); };
 
@@ -154,12 +125,87 @@ function parse(link){
   if(t) s = (+t[1]||0)*3600 + (+t[2]||0)*60 + (+t[3]||0);
   return {id:m[1], start:s};
 }
-var counts = {};
-SONGS.forEach(function(s){ var v=parse(s.link); if(v) counts[v.id]=(counts[v.id]||0)+1; });
 
+/* ---------- read bak.txt ---------- */
+function parseTxt(txt){
+  var groups = [], g = null;
+  txt.replace(/^\uFEFF/, "").split(/\r?\n/).forEach(function(raw){
+    var line = raw.trim();
+    if(!line) return;
+    var h = line.match(/^#\s*(.*)$/);
+    if(h){ g = {label: h[1].trim(), songs: []}; groups.push(g); return; }
+    var u = line.match(/https?:\/\/\S+/);
+    if(!u) return;
+    var parts = line.slice(0, u.index).replace(/[\s|\-\u2013:,]+$/, "").split("|");
+    var name = (parts[0] || "").trim(), movie = (parts[1] || "").trim();
+    if(!g){ g = {label: "", songs: []}; groups.push(g); }
+    g.songs.push({name: name, movie: movie, link: u[0]});
+  });
+  return groups.filter(function(x){ return x.songs.length; });
+}
+
+function setup(txt){
+  var groups = parseTxt(txt);
+  var named = groups.filter(function(x){ return x.label && x.label.toLowerCase() !== "list"; });
+  if(!named.length){
+    /* no tabs: merge everything into one serial list */
+    var all = [];
+    groups.forEach(function(x){ all = all.concat(x.songs); });
+    GROUPS = [{label: "", songs: all}];
+    tabbed = false;
+  }else{
+    groups.forEach(function(x){ if(!x.label) x.label = "List"; });
+    GROUPS = groups;
+    tabbed = true;
+  }
+  GROUPS.forEach(function(x){
+    x.songs.forEach(function(s, i){
+      if(!s.name){ s.name = "Song " + (i + 1); s.auto = true; }
+      var v = parse(s.link); if(v) counts[v.id] = (counts[v.id] || 0) + 1;
+    });
+  });
+  buildTabs();
+  selectTab(0);
+}
+
+/* ---------- tabs ---------- */
+function buildTabs(){
+  var box = $("tabs"); box.innerHTML = "";
+  box.style.display = tabbed ? "flex" : "none";
+  if(!tabbed) return;
+  GROUPS.forEach(function(x, i){
+    var b = document.createElement("button");
+    b.textContent = x.label + " (" + x.songs.length + ")";
+    b.onclick = function(){ selectTab(i); };
+    box.appendChild(b);
+  });
+}
+function selectTab(i){
+  curTab = i; SONGS = GROUPS[i].songs; cur = 0;
+  var bs = $("tabs").children;
+  for(var k = 0; k < bs.length; k++) bs[k].className = (k === i ? "on" : "");
+  buildList();
+  $("listView").scrollTop = 0;
+}
+
+/* ---------- list ---------- */
+function titleFor(s, v, btn){
+  /* only for songs listed without a name in bak.txt */
+  if(!s.auto || s.tried || !v) return;
+  s.tried = true;
+  fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + v.id))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.title){
+        s.name = d.title;
+        if(btn) btn.querySelector("b").textContent = s.name;
+        if(playing && SONGS[cur] === s) paintCap();
+      }
+    }).catch(function(){});
+}
 function buildList(){
   var box = $("items"); box.innerHTML = "";
-  SONGS.forEach(function(s,i){
+  SONGS.forEach(function(s, i){
     var v = parse(s.link), b = document.createElement("button");
     b.className = "item";
     b.innerHTML = '<span class="n">'+(i+1)+'</span><span class="t"><b></b><small></small></span>';
@@ -170,10 +216,12 @@ function buildList(){
     }
     b.onclick = function(){ play(i); };
     box.appendChild(b);
+    titleFor(s, v, b);
   });
 }
 function showList(){ $("playView").style.display="none"; $("listView").style.display="block"; playing=false; }
 
+/* ---------- player ---------- */
 var ytReady = false, ytPlayer = null, pendingPlay = null;
 function onYouTubeIframeAPIReady(){
   ytReady = true;
@@ -188,13 +236,16 @@ function onYouTubeIframeAPIReady(){
   });
   if(pendingPlay !== null){ var i = pendingPlay; pendingPlay = null; play(i); }
 }
-
+function paintCap(){
+  var s = SONGS[cur];
+  $("cap").textContent = (tabbed ? GROUPS[curTab].label + " \u00b7 " : "") + (cur+1) + " / " + SONGS.length + " " + s.name;
+}
 function play(i){
   if(!SONGS.length) return;
   cur = (i + SONGS.length) % SONGS.length; playing = true;
   var s = SONGS[cur], v = parse(s.link);
   $("listView").style.display="none"; $("playView").style.display="flex";
-  $("cap").textContent = (cur+1)+" / "+SONGS.length+"  "+s.name;
+  paintCap();
   $("yt").href = s.link; $("num").value = "";
   if(!v){
     $("msg").textContent = "Song "+(cur+1)+" does not have a valid YouTube video link.";
@@ -206,9 +257,9 @@ function play(i){
   ytPlayer.loadVideoById({ videoId: v.id, startSeconds: v.start });
 }
 $("bFirst").onclick = function(){ play(0); };
-$("bLast").onclick  = function(){ play(SONGS.length-1); };
-$("bPrev").onclick  = function(){ play(cur-1); };
-$("bNext").onclick  = function(){ play(cur+1); };
+$("bLast").onclick = function(){ play(SONGS.length-1); };
+$("bPrev").onclick = function(){ play(cur-1); };
+$("bNext").onclick = function(){ play(cur+1); };
 $("num").oninput = function(){ this.value = this.value.replace(/[^0-9]/g,"").slice(0,3); };
 function go(){
   var n = parseInt($("num").value, 10);
@@ -224,8 +275,18 @@ $("bBack").onclick = function(){
   if(fs){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} }
   else if(playing){ showList(); }
 };
-buildList();
-</script>
 
+/* ---------- start ---------- */
+fetch(TXT_FILE + "?v=" + Date.now(), {cache: "no-store"})
+  .then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); })
+  .then(function(t){
+    setup(t);
+    if(!GROUPS.length || !SONGS.length) $("hint").textContent = TXT_FILE + " has no song links.";
+  })
+  .catch(function(){
+    $("hint").textContent = "Could not load " + TXT_FILE + ". Keep it in the same folder as this page and open the page through http(s).";
+  });
+</script>
+<script src="disable_rightclick.js"></script>
 </body>
 </html>
