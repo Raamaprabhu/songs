@@ -12,11 +12,11 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #ffb7
 button.on{background:#1c7a3d}
 #top{display:flex;gap:6px;padding:8px 10px;background:#181d26}
 #top .sp{flex:1;font-weight:700;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
-#tabs{display:flex;gap:6px;padding:8px 10px 0;background:#181d26}
-#tabs button{flex:1;background:#1b212c;border-radius:8px 8px 0 0;padding:10px 6px;font-weight:600}
-#tabs button.on{background:#ffb703;color:#111}
 #listView{flex:1;overflow-y:auto;padding:6px 10px 20px}
 #listView p{color:#aaa;font-size:14px;margin:8px 2px}
+#tabs{display:none;gap:6px;overflow-x:auto;padding:6px 0 8px;position:sticky;top:0;background:#0f1218;z-index:2;scrollbar-width:thin}
+#tabs button{flex:0 0 auto;padding:10px 16px;white-space:nowrap}
+#tabs button.on{background:#ffb703;color:#111;font-weight:700}
 .item{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#1b212c;margin:0 0 6px;padding:12px}
 .item .n{min-width:34px;height:34px;border-radius:50%;background:#ffb703;color:#111;font-weight:700;display:flex;align-items:center;justify-content:center}
 .item .t{flex:1;min-width:0}
@@ -43,22 +43,21 @@ button.on{background:#1c7a3d}
 </head>
 <body>
 <div id="top">
-  <a class="btn" href="https://raamaprabhu.github.io/songs/index.html">Home</a>
+  <a class="btn" href="index.html">Home</a>
   <span class="sp">Tamil Songs</span>
   <button id="bList">List</button>
   <button id="bFull">Full</button>
 </div>
-<div id="tabs">
-  <button id="tNew">New Songs</button>
-  <button id="tOld">Old Songs</button>
-</div>
+
 <div id="listView">
-  <p>Tamil Songs — tap a song number to play.</p>
+  <div id="tabs"></div>
+  <p id="hint">Tamil Songs &mdash; tap a song number to play.</p>
   <div id="items"></div>
 </div>
+
 <div id="playView">
   <div id="stage"><div id="player"></div><div id="msg" style="display:none"></div></div>
-  <div id="info"><div id="cap"></div><a id="yt" href="https://raamaprabhu.github.io/songs/tamil01.html#" target="_blank" rel="noopener">Open on YouTube</a></div>
+  <div id="info"><div id="cap"></div><a id="yt" href="#" target="_blank" rel="noopener">Open on YouTube</a></div>
   <div id="nav">
     <div class="row">
       <button id="bFirst">First</button>
@@ -76,37 +75,37 @@ button.on{background:#1c7a3d}
     </div>
   </div>
 </div>
+
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /* ==========================================================
-   Songs are loaded from tam.txt in this same folder.
-   Format, one song per line:   name | movie | YouTube link
-   Section markers:             #OLD   and   #NEW
-   (the sections may appear in either order)
+   Songs are now kept in  tam.txt  (same folder as this file).
 
-   Numbering: each tab is numbered 1..N on its own,
-   i.e. New Songs = 1..N and Old Songs = 1..M.
+   tam.txt format, one song per line:
+       Song name | Movie | YouTube link     (leave Movie empty if unknown)
+       Song name | YouTube link             (also works)
+       YouTube link                         (name fetched from YouTube)
+
+   Tabs:  a line starting with #  starts a new tab, e.g.
+       #list1
+       ...songs...
+       #list2
+       ...songs...
+   No # lines at all (or only "#list")  ->  NO tabs, one serial list.
+
+   Start a jukebox video at a time by adding &t=90s to the link.
+   NOTE: tam.txt is loaded with fetch(), so open the page through
+   http(s) (e.g. GitHub Pages), not by double-clicking the file.
    ========================================================== */
-var SONGS = [];
+var TXT_FILE = "https://raw.githubusercontent.com/Raamaprabhu/Songs_test/main/tam.txt";
 
-/* lo/hi = index range inside SONGS for each tab (filled after tam.txt loads) */
-var TABS = { old:{lo:0, hi:-1}, nw:{lo:0, hi:-1} };
-var tab = "nw";                       /* New Songs is the default tab */
+var GROUPS = [], SONGS = [], tabbed = false, curTab = 0, counts = {};
 var cur = 0, playing = false;
 var $ = function(id){ return document.getElementById(id); };
 
 var AKEY = "autoplay:" + location.pathname;
 var autoplay = true;
 try{ var sv = localStorage.getItem(AKEY); if(sv !== null) autoplay = (sv === "1"); }catch(e){}
-
-function rng(){
-  var r = TABS[tab];
-  return { lo: r.lo, hi: Math.min(r.hi, SONGS.length - 1) };
-}
-/* number shown to the user: restarts at 1 in every tab */
-function no(i){ return i - rng().lo + 1; }
-function total(){ var r = rng(); return r.hi - r.lo + 1; }
-
 function paintAuto(){
   var b = $("bAuto");
   b.textContent = "Auto Play: " + (autoplay ? "ON" : "OFF");
@@ -127,17 +126,89 @@ function parse(link){
   return {id:m[1], start:s};
 }
 
-var counts = {};
-function buildList(){
-  var box = $("items"), r = rng(); box.innerHTML = "";
-  if(r.hi < r.lo){
-    var e = document.createElement("p"); e.textContent = "No songs in this list.";
-    box.appendChild(e);
+/* ---------- read tam.txt ---------- */
+function parseTxt(txt){
+  var groups = [], g = null;
+  txt.replace(/^\uFEFF/, "").split(/\r?\n/).forEach(function(raw){
+    var line = raw.trim();
+    if(!line) return;
+    var h = line.match(/^#\s*(.*)$/);
+    if(h){ g = {label: h[1].trim(), songs: []}; groups.push(g); return; }
+    var u = line.match(/https?:\/\/\S+/);
+    if(!u) return;
+    var parts = line.slice(0, u.index).replace(/[\s|\-\u2013:,]+$/, "").split("|");
+    var name = (parts[0] || "").trim(), movie = (parts[1] || "").trim();
+    if(!g){ g = {label: "", songs: []}; groups.push(g); }
+    g.songs.push({name: name, movie: movie, link: u[0]});
+  });
+  return groups.filter(function(x){ return x.songs.length; });
+}
+
+function setup(txt){
+  var groups = parseTxt(txt);
+  var named = groups.filter(function(x){ return x.label && x.label.toLowerCase() !== "list"; });
+  if(!named.length){
+    /* no tabs: merge everything into one serial list */
+    var all = [];
+    groups.forEach(function(x){ all = all.concat(x.songs); });
+    GROUPS = [{label: "", songs: all}];
+    tabbed = false;
+  }else{
+    groups.forEach(function(x){ if(!x.label) x.label = "List"; });
+    GROUPS = groups;
+    tabbed = true;
   }
-  for(var i = r.lo; i <= r.hi; i++){ (function(i){
-    var s = SONGS[i], v = parse(s.link), b = document.createElement("button");
+  GROUPS.forEach(function(x){
+    x.songs.forEach(function(s, i){
+      if(!s.name){ s.name = "Song " + (i + 1); s.auto = true; }
+      var v = parse(s.link); if(v) counts[v.id] = (counts[v.id] || 0) + 1;
+    });
+  });
+  buildTabs();
+  selectTab(0);
+}
+
+/* ---------- tabs ---------- */
+function buildTabs(){
+  var box = $("tabs"); box.innerHTML = "";
+  box.style.display = tabbed ? "flex" : "none";
+  if(!tabbed) return;
+  GROUPS.forEach(function(x, i){
+    var b = document.createElement("button");
+    b.textContent = x.label + " (" + x.songs.length + ")";
+    b.onclick = function(){ selectTab(i); };
+    box.appendChild(b);
+  });
+}
+function selectTab(i){
+  curTab = i; SONGS = GROUPS[i].songs; cur = 0;
+  var bs = $("tabs").children;
+  for(var k = 0; k < bs.length; k++) bs[k].className = (k === i ? "on" : "");
+  buildList();
+  $("listView").scrollTop = 0;
+}
+
+/* ---------- list ---------- */
+function titleFor(s, v, btn){
+  /* only for songs listed without a name in tam.txt */
+  if(!s.auto || s.tried || !v) return;
+  s.tried = true;
+  fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + v.id))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.title){
+        s.name = d.title;
+        if(btn) btn.querySelector("b").textContent = s.name;
+        if(playing && SONGS[cur] === s) paintCap();
+      }
+    }).catch(function(){});
+}
+function buildList(){
+  var box = $("items"); box.innerHTML = "";
+  SONGS.forEach(function(s, i){
+    var v = parse(s.link), b = document.createElement("button");
     b.className = "item";
-    b.innerHTML = '<span class="n">'+no(i)+'</span><span class="t"><b></b><small></small></span>';
+    b.innerHTML = '<span class="n">'+(i+1)+'</span><span class="t"><b></b><small></small></span>';
     b.querySelector("b").textContent = s.name;
     b.querySelector("small").textContent = s.movie || "";
     if(v && counts[v.id] > 1 && !v.start){
@@ -145,22 +216,12 @@ function buildList(){
     }
     b.onclick = function(){ play(i); };
     box.appendChild(b);
-  })(i); }
-  $("tOld").className = tab === "old" ? "on" : "";
-  $("tNew").className = tab === "nw" ? "on" : "";
-  $("listView").scrollTop = 0;
+    titleFor(s, v, b);
+  });
 }
-function setTab(t){ tab = t; buildList(); }
-$("tOld").onclick = function(){ setTab("old"); };
-$("tNew").onclick = function(){ setTab("nw"); };
+function showList(){ $("playView").style.display="none"; $("listView").style.display="block"; playing=false; }
 
-function showList(){
-  $("playView").style.display = "none";
-  $("tabs").style.display = "flex";
-  $("listView").style.display = "block";
-  playing = false;
-}
-
+/* ---------- player ---------- */
 var ytReady = false, ytPlayer = null, pendingPlay = null;
 function onYouTubeIframeAPIReady(){
   ytReady = true;
@@ -175,19 +236,19 @@ function onYouTubeIframeAPIReady(){
   });
   if(pendingPlay !== null){ var i = pendingPlay; pendingPlay = null; play(i); }
 }
-
+function paintCap(){
+  var s = SONGS[cur];
+  $("cap").textContent = (tabbed ? GROUPS[curTab].label + " \u00b7 " : "") + (cur+1) + " / " + SONGS.length + " " + s.name;
+}
 function play(i){
-  var r = rng();
-  if(!SONGS.length || r.hi < r.lo) return;
-  if(i > r.hi) i = r.lo; else if(i < r.lo) i = r.hi; /* loop inside the active tab */
-  cur = i; playing = true;
+  if(!SONGS.length) return;
+  cur = (i + SONGS.length) % SONGS.length; playing = true;
   var s = SONGS[cur], v = parse(s.link);
-  $("tabs").style.display = "none";
-  $("listView").style.display = "none"; $("playView").style.display = "flex";
-  $("cap").textContent = no(cur)+" / "+total()+" "+s.name;
+  $("listView").style.display="none"; $("playView").style.display="flex";
+  paintCap();
   $("yt").href = s.link; $("num").value = "";
   if(!v){
-    $("msg").textContent = "Song "+no(cur)+" does not have a valid YouTube video link.";
+    $("msg").textContent = "Song "+(cur+1)+" does not have a valid YouTube video link.";
     $("msg").style.display = "flex";
     return;
   }
@@ -195,16 +256,15 @@ function play(i){
   if(!ytReady){ pendingPlay = cur; $("msg").textContent = "Loading player..."; $("msg").style.display="flex"; return; }
   ytPlayer.loadVideoById({ videoId: v.id, startSeconds: v.start });
 }
-
-$("bFirst").onclick = function(){ play(rng().lo); };
-$("bLast").onclick = function(){ play(rng().hi); };
+$("bFirst").onclick = function(){ play(0); };
+$("bLast").onclick = function(){ play(SONGS.length-1); };
 $("bPrev").onclick = function(){ play(cur-1); };
 $("bNext").onclick = function(){ play(cur+1); };
 $("num").oninput = function(){ this.value = this.value.replace(/[^0-9]/g,"").slice(0,3); };
 function go(){
-  var r = rng(), n = parseInt($("num").value, 10), t = total();
-  if(n >= 1 && n <= t) play(r.lo + n - 1);      /* n is the per-tab number */
-  else { $("num").value = ""; $("num").placeholder = "1-"+t; }
+  var n = parseInt($("num").value, 10);
+  if(n>=1 && n<=SONGS.length) play(n-1);
+  else { $("num").value=""; $("num").placeholder = "1-"+SONGS.length; }
 }
 $("bGo").onclick = go;
 $("num").onkeydown = function(e){ if(e.key==="Enter") go(); };
@@ -216,50 +276,17 @@ $("bBack").onclick = function(){
   else if(playing){ showList(); }
 };
 
-fetch("https://raw.githubusercontent.com/Raamaprabhu/Songs_test/main/tam.txt")
-  .then(function(response) {
-    if (!response.ok) throw new Error("Unable to load tam.txt (HTTP " + response.status + ")");
-    return response.text();
+/* ---------- start ---------- */
+fetch(TXT_FILE + "?v=" + Date.now(), {cache: "no-store"})
+  .then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); })
+  .then(function(t){
+    setup(t);
+    if(!GROUPS.length || !SONGS.length) $("hint").textContent = TXT_FILE + " has no song links.";
   })
-  .then(function(data) {
-    var section = null;
-    SONGS = [];
-    TABS = { old:{lo:0, hi:-1}, nw:{lo:0, hi:-1} };
-
-    data.split(/\r?\n/).forEach(function(line) {
-      line = line.trim();
-      if (!line) return;
-      if (line.charAt(0) === "#") {
-        var tag = line.replace(/^#+\s*/, "").toUpperCase();
-        if (tag.indexOf("OLD") === 0) {
-          section = "old"; TABS.old.lo = SONGS.length; TABS.old.hi = SONGS.length - 1;
-        } else if (tag.indexOf("NEW") === 0) {
-          section = "nw";  TABS.nw.lo = SONGS.length;  TABS.nw.hi = SONGS.length - 1;
-        }
-        return;
-      }
-      var p = line.split("|");
-      if (!section || p.length < 3 || !p[0].trim() || !p[2].trim()) return;
-      SONGS.push({ name: p[0].trim(), movie: p[1].trim(), link: p.slice(2).join("|").trim() });
-      TABS[section].hi = SONGS.length - 1;
-    });
-
-    var nOld = TABS.old.hi - TABS.old.lo + 1, nNew = TABS.nw.hi - TABS.nw.lo + 1;
-    $("tOld").textContent = "Old Songs (1–" + nOld + ")";
-    $("tNew").textContent = "New Songs (1–" + nNew + ")";
-
-    counts = {};
-    SONGS.forEach(function(s) {
-      var v = parse(s.link);
-      if (v) counts[v.id] = (counts[v.id] || 0) + 1;
-    });
-    buildList();
-  })
-  .catch(function(error) {
-    $("items").textContent = "Error loading songs: " + error.message +
-      ". Make sure tam.txt is in the same folder and served from a web server.";
+  .catch(function(){
+    $("hint").textContent = "Could not load " + TXT_FILE + ". Keep it in the same folder as this page and open the page through http(s).";
   });
 </script>
-<script src="https://raamaprabhu.github.io/songs/disable_rightclick.js"></script>
+<script src="disable_rightclick.js"></script>
 </body>
 </html>
