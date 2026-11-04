@@ -13,20 +13,54 @@ a.card{display:block;background:#1b212c;border-left:5px solid #ffb703;border-rad
 a.card b{display:block;font-size:19px}
 a.card span{color:#aaa;font-size:14px}
 a:focus-visible{outline:2px solid #ffb703;outline-offset:2px}
-</style>
 
+/* full-screen viewer */
+#viewer{position:fixed;inset:0;background:#0f1218;display:none;flex-direction:column;z-index:10}
+#viewer.open{display:flex}
+#bar{padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px}
+#back{background:#ffb703;color:#000;border:0;border-radius:8px;padding:8px 14px;font-size:15px;font-weight:600}
+#frame{flex:1;width:100%;border:0;background:#0f1218}
+</style>
 </head>
 <body>
 <script src="disable_rightclick.js"></script>
 <h1>My Songs Collection</h1>
 <p>Choose a page to see its song list.</p>
-<!-- To add a page: copy one of the lines below, change the file name and text -->
-  
+
 <a class="card" href="https://raamaprabhu.github.io/Songs_test/mp3.html"><b>Audio Songs - Play in the Background </b><span></span></a>
 <a class="card" href="tamil01.html"><b>Tamil Songs (video)</b><span></span></a>
 <a class="card" href="hindi01.html"><b>Hindi Songs (video)</b><span></span></a>
 <a class="card" href="Bhakthi.html"><b>Bhakthi Songs (video)</b><span></span></a>
 <a class="card" href="SivanSongs.html"><b>Sivan Songs (for Pradosham) (video)</b><span></span></a>
 
+<div id="viewer">
+  <div id="bar"><button id="back">← Back</button></div>
+  <iframe id="frame" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
+</div>
+
+<script>
+const viewer = document.getElementById("viewer");
+const frame  = document.getElementById("frame");
+
+function openPage(url) {
+  frame.src = url;
+  viewer.classList.add("open");
+  history.pushState({open:true}, "", location.href);   // phone Back button closes viewer
+}
+function closePage() {
+  viewer.classList.remove("open");
+  frame.src = "about:blank";                            // stops the audio/video
+}
+
+document.querySelectorAll("a.card").forEach(a => {
+  a.addEventListener("click", e => {
+    e.preventDefault();
+    openPage(a.getAttribute("href"));
+  });
+});
+
+document.getElementById("back").onclick = () => history.back();
+window.addEventListener("popstate", closePage);
+</script>
 </body>
 </html>
