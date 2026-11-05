@@ -27,7 +27,8 @@ a:focus-visible{outline:2px solid #ffb703;outline-offset:2px}
 <h1>My Songs Collection</h1>
 <p>Choose a page to see its song list.</p>
 
-<a class="card" href="https://raamaprabhu.github.io/Songs_test/mp3.html"><b>Audio Songs - Play in the Background </b><span></span></a>
+<!-- data-direct: opens as a normal page (NOT inside the viewer/iframe) so background playback and screen wake-lock work -->
+<a class="card" data-direct href="https://raamaprabhu.github.io/Songs_test/mp3.html"><b>Audio Songs - Play in the Background </b><span></span></a>
 <a class="card" href="tamil01.html"><b>Tamil Songs (video)</b><span></span></a>
 <a class="card" href="hindi01.html"><b>Hindi Songs (video)</b><span></span></a>
 <a class="card" href="Bhakthi.html"><b>Bhakthi Songs (video)</b><span></span></a>
@@ -35,7 +36,7 @@ a:focus-visible{outline:2px solid #ffb703;outline-offset:2px}
 
 <div id="viewer">
   <div id="bar"><button id="back">← Back</button></div>
-  <iframe id="frame" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
+  <iframe id="frame" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; screen-wake-lock"></iframe>
 </div>
 
 <script>
@@ -52,7 +53,8 @@ function closePage() {
   frame.src = "about:blank";                            // stops the audio/video
 }
 
-document.querySelectorAll("a.card").forEach(a => {
+// Only the video pages open inside the viewer; the audio page (data-direct) is a normal link
+document.querySelectorAll("a.card:not([data-direct])").forEach(a => {
   a.addEventListener("click", e => {
     e.preventDefault();
     openPage(a.getAttribute("href"));
