@@ -27,7 +27,10 @@ a:focus-visible{outline:2px solid #ffb703;outline-offset:2px}
 <h1>My Songs Collection</h1>
 <p>Choose a page to see its song list.</p>
 
-<a class="card" href="https://raamaprabhu.github.io/Songs_test/mp3.html"><b>Audio Songs - Play in the Background </b><span></span></a>
+<!-- Only this first link opens inside the iframe (data-iframe) -->
+<a class="card" data-iframe href="https://raamaprabhu.github.io/Songs_test/mp3.html"><b>Audio Songs - Play in the Background </b><span></span></a>
+
+<!-- These open as normal links -->
 <a class="card" href="tamil01.html"><b>Tamil Songs (video)</b><span></span></a>
 <a class="card" href="hindi01.html"><b>Hindi Songs (video)</b><span></span></a>
 <a class="card" href="Bhakthi.html"><b>Bhakthi Songs (video)</b><span></span></a>
@@ -52,7 +55,8 @@ function closePage() {
   frame.src = "about:blank";                            // stops the audio/video
 }
 
-document.querySelectorAll("a.card").forEach(a => {
+// Only links marked with data-iframe open in the viewer
+document.querySelectorAll("a.card[data-iframe]").forEach(a => {
   a.addEventListener("click", e => {
     e.preventDefault();
     openPage(a.getAttribute("href"));
